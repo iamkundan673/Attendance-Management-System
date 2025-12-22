@@ -119,6 +119,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
+ALLOWED_ATTENDANCE_IPS = [
+    "27.34.111.64",  # your office/campus static public IP
+]
+
+# settings.py
+TIME_ZONE = 'Asia/Kathmandu'
+USE_TZ = True
+from datetime import time
+
+# settings.py
+ATTENDANCE_START_TIME = time(9, 0)   # 9:00 AM
+ATTENDANCE_END_TIME = time(10, 30)    # 10:30 AM
+
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

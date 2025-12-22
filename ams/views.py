@@ -10,14 +10,12 @@ from django.http import JsonResponse
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from django.utils import timezone
-from .utils import get_client_ip, is_in_office_network
+from .utils import get_client_ip
 from datetime import date, datetime
 from django.conf import settings
 import os
 from rest_framework import status 
 from .serializer import AdduserSerializer
-
-
 #--------------------------
 # user login 
 #--------------------------
@@ -53,7 +51,6 @@ def user_login_api(request):
           
         }
     })
-
 #-----------------------------------------------------------
 # Reseting the password of the user by admin
 #-----------------------------------------------------------
@@ -132,6 +129,7 @@ def dashboard_api(request):
         },
         'success': True
     })
+
 #----------------------tei mark attendence ho 
 # @csrf_exempt
 # @api_view(['POST'])
@@ -172,17 +170,26 @@ def dashboard_api(request):
 #             'status': attendance.status
 #         }
 #     })
+
+
+def is_within_time_window():
+    now = datetime.now().time()  # current server time
+    return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
+
+
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def attendance_api(request):
     user = request.user
-    user_ip = get_client_ip(request)
+    client_ip = get_client_ip(request)
 
-    # Check if user is in the office network
-    if not is_in_office_network(user_ip):
-        return Response({'success': False, 'error': 'You are not in the office network'}, status=403)
+    if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
+        return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
 
+    if not is_within_time_window():
+        return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
+    
     # Check if already marked today
     today = date.today()
     if Attendance.objects.filter(user=user, date=today).exists():
@@ -195,8 +202,8 @@ def attendance_api(request):
     # Save attendance (with new attendance_status field)
     attendance = Attendance.objects.create(
         user=user,
-        ip_address=user_ip,
-        status=status,                       # existing On Time / Late
+        ip_address=client_ip,
+        status=status,                       #  On Time / Late
         attendance_status=Attendance.ATT_PRESENT,  # new field for Present / Absent
         date=today,
         check_in_time=timezone.now()
@@ -212,7 +219,7 @@ def attendance_api(request):
             'status': attendance.status,               # On Time / Late
             'attendance_status': attendance.attendance_status  # Present / Absent
         }
-    })
+    }) 
 
 # user attendence history
 @api_view(['GET'])
