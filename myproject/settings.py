@@ -29,14 +29,18 @@ APPEND_SLASH = True  # This is fine
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "attendance-management-system-1-vx3k.onrender.com",
-    "localhost",            # allows local access
+    "attendance-management-system-lbce.onrender.com",
+    "localhost",
+    ".onrender.com",            # allows local access
     "127.0.0.1",            # default localhost
     "127.0.0.1",            # default localhost
     "192.168.1.68",         # your computer's LAN IP
     "10.65.213.116"
     "10.213.222.116"
 ]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 
 # OFFICE_PUBLIC_IP = "27.34.111.72"
 
