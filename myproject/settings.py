@@ -26,16 +26,17 @@ SECRET_KEY = 'django-insecure-6f&dy9eu8b+d%i=y$w0j8jv^ityd*@@==d7pab17!q5o0uh^w5
 APPEND_SLASH = True  # This is fine
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
+    "*",
     "attendance-management-system-lbce.onrender.com",
+    "attendance-management-system-1-vx3k.onrender.com",
     "localhost",
     ".onrender.com",            # allows local access
     "127.0.0.1",            # default localhost
-    "127.0.0.1",            # default localhost
     "192.168.1.68",         # your computer's LAN IP
-    "10.65.213.116"
+    "10.65.213.116",
     "10.213.222.116"
 ]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -85,6 +86,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',  # allow public access by default
@@ -95,15 +97,15 @@ REST_FRAMEWORK = {
 
     
 }
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
 
 import os
+from pathlib import Path
 import dj_database_url
+from dotenv import load_dotenv
+load_dotenv()
 
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
@@ -189,8 +191,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
