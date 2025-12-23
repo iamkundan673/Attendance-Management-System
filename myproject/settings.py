@@ -29,8 +29,7 @@ APPEND_SLASH = True  # This is fine
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "*",
-    "https://attendance-management-system-1-vx3k.onrender.com",
+    "attendance-management-system-1-vx3k.onrender.com",
     "localhost",            # allows local access
     "127.0.0.1",            # default localhost
     "127.0.0.1",            # default localhost
@@ -62,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -97,13 +97,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-import dj_database_url
 import os
+import dj_database_url
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get("postgresql://attenddb_user:LkjmJycUaVhhdEjDurdAP4o7YC95OTAB@dpg-d552pr75r7bs73ep7q10-a/attenddb")
-    )
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 AUTH_USER_MODEL = 'ams.Adduser'
 
@@ -190,7 +188,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware'] + MIDDLEWARE
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULTS = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
@@ -229,3 +232,5 @@ EMAIL_USE_TLS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"

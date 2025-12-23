@@ -19,8 +19,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path,include
 from . import views
+from django.http import HttpResponse
+
+def home(request):
+    return HttpResponse("Attendance System is live!")
 
 urlpatterns = [
+    path('',home,name='home'),
     path('login/',views.user_login_api,name="user_login_api"),
     path('dashboard/', views.dashboard_api, name='user-dashboard'),
     path('attendance/', views.attendance_api, name='mark_attendance'),
