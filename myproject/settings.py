@@ -30,10 +30,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "*",
+    "https://attendance-management-system-1-vx3k.onrender.com",
     "localhost",            # allows local access
     "127.0.0.1",            # default localhost
     "127.0.0.1",            # default localhost
-    "192.168.1.124",         # your computer's LAN IP
+    "192.168.1.68",         # your computer's LAN IP
     "10.65.213.116"
     "10.213.222.116"
 ]
@@ -72,7 +73,7 @@ CORS_ALLOWED_CREDENTIALS=True
 CORS_ALLOWED_ORIGINS = [
     
     # "http://192.168.1.100:5173",
-    "http://192.168.1.109:5173",
+    "http://192.168.1.73:5173",
     "http://10.213.222.156:5174",
 ]
 
@@ -96,7 +97,14 @@ REST_FRAMEWORK = {
     ),
 }
 
+import dj_database_url
+import os
 
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get("postgresql://attenddb_user:LkjmJycUaVhhdEjDurdAP4o7YC95OTAB@dpg-d552pr75r7bs73ep7q10-a/attenddb")
+    )
+}
 AUTH_USER_MODEL = 'ams.Adduser'
 
 

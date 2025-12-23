@@ -602,7 +602,7 @@ def list_all_leaves_api(request):
 # user leave ,List leave requests,specific one user by filtering id 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def user_leaves_api(request):
     """
     Admin API: 
@@ -696,8 +696,7 @@ def leave_action_api(request, leave_id):
 
 
 # images -----store,
-# leave details of the user.
-# 
+# leave details of the user
 
 # only admin sees the details of the 
 from django.db.models import Count, Q
