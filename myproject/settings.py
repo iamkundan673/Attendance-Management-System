@@ -243,12 +243,12 @@ ADMIN_EMAIL = "kundanchapagain555@gmail.com"
 
 #email setting 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.sendgrid.net.com'
+EMAIL_HOST_USER = "apikey"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'kundanchapagain555@gmail.com'
-EMAIL_HOST_PASSWORD = 'lalm rqqo nson mnmt'
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY") 
 EMAIL_USE_TLS = True
-
+DEFAULT_FROM_EMAIL = "kundanchapagain555@gmail.com"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
