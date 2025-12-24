@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'ams',
     'account',
     'rest_framework',
+    "account.apps.AccountConfig",
     'rest_framework.authtoken'
 ]
 
