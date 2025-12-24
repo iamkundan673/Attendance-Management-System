@@ -14,3 +14,9 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 
 application = get_wsgi_application()
+
+# Create superuser if it doesn't exist
+try:
+    import create_admin
+except Exception as e:
+    print("Superuser creation skipped:", e)
