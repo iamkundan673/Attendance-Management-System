@@ -22,6 +22,8 @@ from rest_framework.permissions import AllowAny
 # user login 
 #--------------------------
 @csrf_exempt
+@authentication_classes([])  # disables authentication
+@permission_classes([AllowAny])  # allows any user to call this view
 @api_view(['POST'])
 def user_login_api(request):
     username = request.data.get('username', '').strip()
