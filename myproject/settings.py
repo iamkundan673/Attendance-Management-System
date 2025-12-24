@@ -105,6 +105,13 @@ REST_FRAMEWORK = {
     
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5174",
+    "https://byte-attendance.vercel.app",
+    "attendance-management-system-1-vx3k.onrender.com",  # must include https://
+]
+
+
 import os
 from pathlib import Path
 import dj_database_url
