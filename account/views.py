@@ -4,9 +4,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
+from django.views.decorators.csrf import csrf_exempt
 
 
 # admin login
+@csrf_exempt
 @api_view(['POST'])
 # @permission_classes([IsAdminUser])
 def user_login_api(request):
