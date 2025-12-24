@@ -1,5 +1,5 @@
 # Create your views here.
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.response import Response
 from django.contrib.auth.hashers import check_password,make_password
 from django.views.decorators.csrf import csrf_exempt
