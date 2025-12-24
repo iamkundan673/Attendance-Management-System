@@ -16,9 +16,11 @@ from django.conf import settings
 import os
 from rest_framework import status 
 from .serializer import AdduserSerializer
+from rest_framework.permissions import AllowAny
 #--------------------------
 # user login 
 #--------------------------
+@permission_classes([AllowAny])
 @api_view(['POST'])
 def user_login_api(request):
     username = request.data.get('username', '').strip()
