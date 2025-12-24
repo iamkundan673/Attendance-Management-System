@@ -682,9 +682,9 @@ def leave_action_api(request, leave_id):
             subject=f"Leave Request {leave.status.capitalize()}",
             message=f"Hello {leave.full_name},\n\n"
                     f"Your leave request ({leave.leave_type}) has been {leave.status}.",
-            from_email='kundanchapagain555@gmail.com',
+            from_email=None,  # will use DEFAULT_FROM_EMAIL
             recipient_list=[leave.email],
-            fail_silently=False,  # optional: will raise error if email fails
+            fail_silently=False,
         )
     except Exception as e:
         print(f"Failed to send email to {leave.email}: {e}")
@@ -693,7 +693,7 @@ def leave_action_api(request, leave_id):
         'success': True,
         'status':leave.status,
         'message': f'Leave {leave.status} successfully.'
-    })
+    })  
 
 
 

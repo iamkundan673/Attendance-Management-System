@@ -42,6 +42,12 @@ ALLOWED_HOSTS = [
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# settings.py
+import os
+EMAIL_BACKEND = "sgbackend.SendGridBackend"
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")  # Add in Render env vars
+DEFAULT_FROM_EMAIL = os.environ.get("kundanchapagain555@gmail.com")  # Verified sender email
+
 
 # OFFICE_PUBLIC_IP = "27.34.111.72"
 
