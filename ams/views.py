@@ -614,9 +614,18 @@ def user_leaves_api(request):
     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
 
     if leave_id:
-        leaves = leaves.filter(id=leave_id)
-    elif user_id:
-        leaves = leaves.filter(employee__id=user_id)
+        try:
+            leave_id = int(leave_id)
+            leaves = leaves.filter(id=leave_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid leave_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if user_id:
+        try:
+            user_id = int(user_id)
+            leaves = leaves.filter(employee__id=user_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
 
     if not leaves.exists():
         return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
