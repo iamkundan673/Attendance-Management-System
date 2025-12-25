@@ -861,18 +861,55 @@ def holiday_list_api(request):
 
 #-----------------------------------------------------------#
 # delete holiday by admin
+from datetime import timedelta, datetime
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def holiday_delete_api(request, holiday_id):
+def holiday_delete_api(request):
     user = request.user
     if not user.is_staff:
         return Response({"success": False, "error": "Permission denied"}, status=403)
 
+    holiday_id = request.data.get("holiday_id")
+    date_str = request.data.get("date")
+
+    if not holiday_id or not date_str:
+        return Response({"success": False, "error": "holiday_id and date are required"}, status=400)
+
     try:
+        delete_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         holiday = Holiday.objects.get(id=holiday_id)
-    except Holiday.DoesNotExist:
-        return Response({"success": False, "error": "Holiday not found"}, status=404)
+    except (ValueError, Holiday.DoesNotExist):
+        return Response({"success": False, "error": "Invalid data"}, status=400)
 
-    holiday.delete()
+    start = holiday.start_date
+    end = holiday.end_date or holiday.start_date
 
-    return Response({"success": True, "message": "Holiday deleted successfully"})
+    if delete_date < start or delete_date > end:
+        return Response({"success": False, "error": "Date not in holiday range"}, status=400)
+
+    # CASE 1: single-day holiday
+    if start == end == delete_date:
+        holiday.delete()
+
+    # CASE 2: deleting start date
+    elif delete_date == start:
+        holiday.start_date = start + timedelta(days=1)
+        holiday.save()
+
+    # CASE 3: deleting end date
+    elif delete_date == end:
+        holiday.end_date = end - timedelta(days=1)
+        holiday.save()
+
+    # CASE 4: deleting middle date → split
+    else:
+        Holiday.objects.create(
+            start_date=start,
+            end_date=delete_date - timedelta(days=1),
+            description=holiday.description
+        )
+        holiday.start_date = delete_date + timedelta(days=1)
+        holiday.save()
+
+    return Response({"success": True, "message": "Holiday date removed successfully"})
