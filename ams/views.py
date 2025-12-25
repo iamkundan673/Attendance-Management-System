@@ -184,9 +184,9 @@ def dashboard_api(request):
 #     })
 
 
-def is_within_time_window():
-    now = datetime.now().time()  # current server time
-    return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
+# def is_within_time_window():
+#     now = datetime.now().time()  # current server time
+#     return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
 
 
 @csrf_exempt
@@ -199,8 +199,8 @@ def attendance_api(request):
     if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
         return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
 
-    if not is_within_time_window():
-        return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
+    # if not is_within_time_window():
+    #     return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
     
     # Check if already marked today
     today = date.today()
