@@ -17,14 +17,15 @@ import os
 from rest_framework import status 
 from .serializer import AdduserSerializer
 from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
 
 #--------------------------
 # user login 
 #--------------------------
 @csrf_exempt
+@api_view(['POST'])
 @authentication_classes([])  # disables authentication
 @permission_classes([AllowAny])  # allows any user to call this view
-@api_view(['POST'])
 def user_login_api(request):
     username = request.data.get('username', '').strip()
     password = request.data.get('password', '').strip()
@@ -32,13 +33,19 @@ def user_login_api(request):
     if not username or not password:
         return Response({'success': False, 'message': 'Username and password are required'}, status=400)
 
-    try:
-        user = Adduser.objects.get(username=username)
-    except Adduser.DoesNotExist:
-        return Response({'success': False, 'message': 'Invalid username or password'}, status=401)
+    user = authenticate(username=username, password=password)
 
-    if not check_password(password, user.password):
-        return Response({'success': False, 'message': 'Invalid username or password'}, status=401)
+    if user is None:
+        return Response(
+            {'success': False, 'message': 'Invalid username or password'},
+            status=401
+        )
+
+    if not user.is_active:
+        return Response(
+            {'success': False, 'message': 'Account is inactive'},
+            status=403
+        )
 
     # Generate JWT tokens
     refresh = RefreshToken.for_user(user)
@@ -86,7 +93,7 @@ def admin_reset_password(request, user_id):
         return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
 
     # Update password
-    user.password = make_password(password)
+    user.set_password(password)
     user.save()
 
     # Send new password via email
@@ -338,13 +345,13 @@ def generate_temp_password(length=8):
     import secrets, string
     chars = string.ascii_letters + string.digits
     return ''.join(secrets.choice(chars) for _ in range(length))
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def create_user_api(request): 
-    # Only staff/admin can create users
-    if not request.user.is_staff:
-        return Response({"detail": "Only admin can create users"}, status=403)
+def create_user_api(request):
 
     data = request.data
 
@@ -352,72 +359,58 @@ def create_user_api(request):
     email = data.get("email")
     role = data.get("role", "")
 
-    # Validate required fields
     if not email:
         return Response({"detail": "Email is required"}, status=400)
 
     if not Full_Name:
         return Response({"detail": "Fullname is required"}, status=400)
 
-    # Auto-generate username from email
     username = email.split("@")[0]
 
-    # Check duplicates
-    if Adduser.objects.filter(username=username).exists():
+    if User.objects.filter(username=username).exists():
         return Response({"detail": "Username already exists"}, status=400)
 
-    if Adduser.objects.filter(email=email).exists():
+    if User.objects.filter(email=email).exists():
         return Response({"detail": "Email already exists"}, status=400)
 
-    # Generate temporary password
     temp_password = generate_temp_password()
+    profile_picture = request.FILES.get('profile_picture')
 
-    # Handle profile picture
-    profile_picture = request.FILES.get('profile_picture', None)
-
-    # Create user
-    user = Adduser.objects.create(
-        Full_Name=Full_Name,
+    # CORRECT USER CREATION
+    user = User.objects.create_user(
         username=username,
         email=email,
-        role=role,
-        password=make_password(temp_password),
-        profile_picture=profile_picture,
-        is_staff=False,
-        is_superuser=False
+        password=temp_password
     )
 
-    # Send email with temp password
+    user.Full_Name = Full_Name
+    user.role = role
+    user.profile_picture = profile_picture
+    user.is_staff = False
+    user.is_superuser = False
+    user.is_active = True
+    user.save()
+
+    # Send email
     subject = "Your Account Login Details"
     message = f"""
 Hello {Full_Name},
 
 Your account has been created successfully.
 
-Login Details:
-------------------------
 Username: {username}
-Email: {email}
 Temporary Password: {temp_password}
 
 Please log in and change your password immediately.
-
-Thanks,
-The Team
 """
 
-    try:
-        send_mail(subject, message, 'kundanchapagain555@gmail.com', [email])
-    except Exception as e:
-        return Response({
-            "detail": "User created but failed to send email.",
-            "error": str(e)
-        }, status=500)
+    send_mail(subject, message, 'kundanchapagain555@gmail.com', [email])
 
     serializer = AdduserSerializer(user)
+
     return Response({
         "success": True,
-        "message": "User created. Temporary password sent to email.",
+        "message": "User created successfully",
         "user": serializer.data
     })
 
