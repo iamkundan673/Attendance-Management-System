@@ -43,6 +43,7 @@ urlpatterns = [
     path('userleave/', views.user_leaves_api, name='user_leaves-api'),
     path('uleavedetails/',views.my_attendance_summary_api,name='attendence_summary_of_user'),
     path('alleavedetails/',views.present_absent_summary_api,name='present_absent_summary_api'),
+    path('profilepic/',views.upload_profile_picture_api,name='upload_profile_picture_api'),
 
     # path('ip/', views.ipcheck, name='edi'),
     # path('ams/', include('ams.urls')),

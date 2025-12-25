@@ -374,7 +374,6 @@ def create_user_api(request):
         return Response({"detail": "Email already exists"}, status=400)
 
     temp_password = generate_temp_password()
-    profile_picture = request.FILES.get('profile_picture')
 
     # CORRECT USER CREATION
     user = User.objects.create_user(
@@ -385,7 +384,6 @@ def create_user_api(request):
 
     user.Full_Name = Full_Name
     user.role = role
-    user.profile_picture = profile_picture
     user.is_staff = False
     user.is_superuser = False
     user.is_active = True
@@ -413,6 +411,31 @@ Please log in and change your password immediately.
         "message": "User created successfully",
         "user": serializer.data
     })
+
+#----------------------------------------
+# add profile picture of user
+@csrf_exempt
+@api_view(["POST"])
+def upload_profile_picture_api(request, user_id):
+    try:
+        user = Adduser.objects.get(id=user_id)
+    except Adduser.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+
+    profile_picture = request.FILES.get('profile_picture')
+    if not profile_picture:
+        return JsonResponse({'success': False, 'error': 'No profile picture provided'}, status=400)
+
+    user.profile_picture = profile_picture
+    user.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': 'Profile picture uploaded successfully',
+        'profile_picture_url': request.build_absolute_uri(user.profile_picture.url)
+    })
+
+
 
 #---------------------------------------
 # edit user ,role ra status like active or disable garcha admin le
