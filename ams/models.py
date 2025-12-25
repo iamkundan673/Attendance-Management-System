@@ -78,6 +78,7 @@ LEAVE_CHOICES = [
     ('earned', 'Earned Leave'),
 ]
 
+# leave request model
 class LeaveRequest(models.Model):
     employee = models.ForeignKey(Adduser, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=255)
@@ -88,6 +89,7 @@ class LeaveRequest(models.Model):
     document = models.FileField(upload_to='leave_docs/')
     status = models.CharField(max_length=10, choices=[('pending','Pending'), ('approved','Approved'), ('rejected','Rejected')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    reject_reason = models.TextField(null=True, blank=True) 
 
     def __str__(self):
         return f"{self.full_name} - {self.leave_type} - {self.status}"
@@ -98,3 +100,14 @@ class OfficeIP(models.Model):
 
     def __str__(self):
         return self.ip_address
+
+# holiday model
+class Holiday(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    description = models.CharField(max_length=255)
+
+    def __str__(self):
+        if self.end_date:
+            return f"{self.start_date} to {self.end_date} - {self.description[:50]}..."
+        return f"{self.start_date} - {self.description[:50]}..."

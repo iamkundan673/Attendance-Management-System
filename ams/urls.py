@@ -44,6 +44,9 @@ urlpatterns = [
     path('uleavedetails/',views.my_attendance_summary_api,name='attendence_summary_of_user'),
     path('alleavedetails/',views.present_absent_summary_api,name='present_absent_summary_api'),
     path('profilepic/',views.upload_profile_picture_api,name='upload_profile_picture_api'),
+    path('hocreate/',views.holiday_create_api,name='holiday_create_api'),
+    path('listholiday/',views.holiday_list_api,name='holiday_list_api'),
+    path('delholiday/<int:user_id>/',views.holiday_delete_api,name='holiday_delete_api'),
 
     # path('ip/', views.ipcheck, name='edi'),
     # path('ams/', include('ams.urls')),

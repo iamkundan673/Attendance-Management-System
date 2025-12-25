@@ -12,3 +12,20 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+from datetime import date
+from .models import Holiday
+
+def is_holiday(check_date: date) -> bool:
+    """
+    Returns True if the given date is a holiday.
+    Works for both single-day and multi-day holidays.
+    """
+    # Check single-day holidays or multi-day ranges
+    return Holiday.objects.filter(
+        start_date__lte=check_date,
+        end_date__gte=check_date
+    ).exists() or Holiday.objects.filter(
+        start_date=check_date,
+        end_date__isnull=True
+    ).exists()

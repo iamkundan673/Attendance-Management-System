@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from django.utils import timezone
-from .utils import get_client_ip
+from .utils import get_client_ip, is_holiday
 from datetime import date, datetime
 from django.conf import settings
 import os
@@ -188,6 +188,7 @@ def dashboard_api(request):
 #     now = datetime.now().time()  # current server time
 #     return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
 
+from .models import Holiday
 
 @csrf_exempt
 @api_view(['POST'])
@@ -198,12 +199,15 @@ def attendance_api(request):
 
     if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
         return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
-
     # if not is_within_time_window():
     #     return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
     
     # Check if already marked today
     today = date.today()
+    
+    if is_holiday(today):
+        return Response({"success": False, "error": "Attendance cannot be marked on a holiday." }, status=403)
+    
     if Attendance.objects.filter(user=user, date=today).exists():
         return Response({'success': False, 'error': 'Attendance already marked today.'})
 
@@ -411,7 +415,6 @@ Please log in and change your password immediately.
         "message": "User created successfully",
         "user": serializer.data
     })
-
 #----------------------------------------
 # add profile picture of user
 @csrf_exempt
@@ -575,8 +578,7 @@ def submit_leave_api(request):
             'document_url': request.build_absolute_uri(leave.document.url)
         }
     })
-
-
+#-----------------------------------------------------------
 # listing all the user leaves applications 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -670,6 +672,7 @@ def user_leaves_api(request):
             "status": leave.status,
             "document_url": doc_url,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+
         })
 
     # If leave_id is provided, return a single object instead of a list
@@ -788,3 +791,88 @@ def my_attendance_summary_api(request):
         "absent_days": absent_days,
         "total_days": present_days + absent_days
     })
+
+
+#-----------------------------------------------------------#
+# inserting holidays by admin
+from datetime import datetime
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def holiday_create_api(request):
+    user = request.user
+    if not user.is_staff:
+        return Response({"success": False, "error": "Permission denied"}, status=403)
+
+    start_date_str = request.data.get('start_date')
+    end_date_str = request.data.get('end_date')
+    description = request.data.get('description')
+
+    if not start_date_str or not description:
+        return Response({"success": False, "error": "start_date and description are required"}, status=400)
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end_date = None
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            if end_date < start_date:
+                return Response({"success": False, "error": "end_date cannot be before start_date"}, status=400)
+    except ValueError:
+        return Response({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}, status=400)
+
+    holiday = Holiday.objects.create(start_date=start_date, end_date=end_date, description=description)
+
+    return Response({
+        "success": True,
+        "holiday": {
+            "id": holiday.id,
+            "start_date": holiday.start_date.strftime("%Y-%m-%d"),
+            "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
+            "description": holiday.description
+        }
+    }, status=201)
+
+#-----------------------------------------------------------#
+# Getting all the holidays
+from .models import Holiday
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def holiday_list_api(request):
+    user = request.user
+    if not user.is_staff:
+        return Response({"success": False, "error": "Permission denied"}, status=403)
+
+    holidays = Holiday.objects.all().order_by('-start_date')
+
+    data = []
+    for holiday in holidays:
+        data.append({
+            "id": holiday.id,
+            "start_date": holiday.start_date.strftime("%Y-%m-%d"),
+            "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
+            "description": holiday.description
+        })
+
+    return Response({
+        "success": True,
+        "holidays": data
+    })
+
+#-----------------------------------------------------------#
+# delete holiday by admin
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def holiday_delete_api(request, holiday_id):
+    user = request.user
+    if not user.is_staff:
+        return Response({"success": False, "error": "Permission denied"}, status=403)
+
+    try:
+        holiday = Holiday.objects.get(id=holiday_id)
+    except Holiday.DoesNotExist:
+        return Response({"success": False, "error": "Holiday not found"}, status=404)
+
+    holiday.delete()
+
+    return Response({"success": True, "message": "Holiday deleted successfully"})
