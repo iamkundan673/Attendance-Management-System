@@ -596,10 +596,8 @@ def list_all_leaves_api(request):
 
     data = []
     for leave in leaves:
-        # Check if document exists before building URL
-        doc_url = None
-        if leave.document and os.path.exists(leave.document.path):
-            doc_url = request.build_absolute_uri(leave.document.url)
+        # Cloudinary URL
+        doc_url = leave.document.url if leave.document else None
 
         data.append({
             "id": leave.id,
@@ -657,9 +655,7 @@ def user_leaves_api(request):
 
     data = []
     for leave in leaves:
-        doc_url = None
-        if leave.document and os.path.exists(leave.document.path):
-            doc_url = request.build_absolute_uri(leave.document.url)
+        doc_url = leave.document.url if leave.document else None
 
         data.append({
             "id": leave.id,
