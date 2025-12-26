@@ -65,7 +65,9 @@ INSTALLED_APPS = [
     # 'account',
     'rest_framework',
     "account.apps.AccountConfig",
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -118,6 +120,9 @@ import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
 
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 DATABASES = {
@@ -256,7 +261,21 @@ EMAIL_PORT = 587
 EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY") 
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "kundanchapagain555@gmail.com"
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+import cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+cloudinary.config(
+    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key=CLOUDINARY_STORAGE['API_KEY'],
+    api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+)

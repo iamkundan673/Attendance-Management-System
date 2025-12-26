@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 class Adduser(AbstractUser):
     Full_Name = models.CharField(max_length=50, blank=True)
@@ -12,11 +13,7 @@ class Adduser(AbstractUser):
     password = models.CharField(max_length=128)
     token = models.CharField(max_length=64, blank=True, null=True)
 
-    profile_picture = models.ImageField(
-        upload_to='profile_pic/',  # folder in MEDIA_ROOT
-        null=True,
-        blank=True
-    )
+    profile_picture =  CloudinaryField(resource_type='image',folder='leave_images',null=True,blank=True)
 
 
     ROLE_CHOICES=[
@@ -86,7 +83,7 @@ class LeaveRequest(models.Model):
     leave_type = models.CharField(max_length=20, choices=LEAVE_CHOICES)
     # start_date = models.DateField()
     # end_date = models.DateField()
-    document = models.FileField(upload_to='leave_docs/')
+    document = CloudinaryField(resource_type='raw',folder='leave_docs',null=True,blank=True)
     status = models.CharField(max_length=10, choices=[('pending','Pending'), ('approved','Approved'), ('rejected','Rejected')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     reject_reason = models.TextField(null=True, blank=True) 
