@@ -530,9 +530,12 @@ def user_delete_api(request, user_id):
 #-----------------------------------------------------------
 # subbmiting the leave 
 #-----------------------------------------------------------
-
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+import cloudinary.uploader
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def submit_leave_api(request):
     user = request.user
     full_name=request.data.get('full_name')
@@ -545,7 +548,7 @@ def submit_leave_api(request):
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
     # Upload directly to Cloudinary
-    import cloudinary.uploader
+    
     upload_result = cloudinary.uploader.upload(
         document,
         resource_type='raw',
@@ -582,7 +585,7 @@ def submit_leave_api(request):
             'email': leave.email,
             'leave_type': leave.leave_type,
             'status': leave.status,
-            'document_url': cloudinary.utils.cloudinary_url(leave.document, resource_type='raw')[0]
+            'document_url': upload_result['secure_url'] 
         }
     })
 #-----------------------------------------------------------
