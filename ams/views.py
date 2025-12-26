@@ -548,20 +548,22 @@ def submit_leave_api(request):
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
     # Upload directly to Cloudinary
-    upload_result = cloudinary.uploader.upload(
-        document,
-        resource_type='raw',
-        access_mode="public",
-        folder='leave_docs'
-    )
+    # upload_result = cloudinary.uploader.upload(
+    #     document,
+    #     resource_type='raw',
+    #     access_mode="public",
+    #     folder='leave_docs'
+    # )
 
     leave = LeaveRequest.objects.create(
         employee=user,
         full_name=full_name,
         email=user.email,
         leave_type=leave_type,
-        document=upload_result['public_id']  # FIXED: Use public_id, not 'leave_docs/'
+        document=document  # FIXED: Use public_id, not 'leave_docs/'
     )
+    doc_url = leave.document.url if leave.document else None
+    doc_filename = str(leave.document).split('/')[-1] if leave.document else None
 
     # Return API response
     return Response({
@@ -573,8 +575,8 @@ def submit_leave_api(request):
             'email': leave.email,
             'leave_type': leave.leave_type,
             'status': leave.status,
-            'document_url': leave.document.url,  # FIXED: Use .url for full URL
-            'document_filename': str(leave.document).split('/')[-1]  # Bonus: filename
+            'document_url': doc_url,  # FIXED: Use .url for full URL
+            'document_filename': doc_filename  # Bonus: filename
         }
     })
 
