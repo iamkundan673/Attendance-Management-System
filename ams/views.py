@@ -560,7 +560,7 @@ def submit_leave_api(request):
         full_name=full_name,
         email=user.email,
         leave_type=leave_type,
-        document=upload_result['public_id']  # store Cloudinary public_id
+        document=upload_result['secure_url']  # store Cloudinary public_id
     )
     
     # Notify admin (optional)
@@ -585,7 +585,7 @@ def submit_leave_api(request):
             'email': leave.email,
             'leave_type': leave.leave_type,
             'status': leave.status,
-            'document_url': upload_result['secure_url'] 
+            'document_url': leave.document
         }
     })
 #-----------------------------------------------------------
@@ -608,32 +608,21 @@ def list_all_leaves_api(request):
     data = []
     for leave in leaves:
         # Cloudinary URL
-        doc_url = None
-        if leave.document:
-            public_id = (
-                leave.document.public_id
-                if hasattr(leave.document, "public_id")
-                else leave.document
-            )
-
-            doc_url, _ = cloudinary_url(
-                public_id,
-                resource_type="raw",
-                flags="attachment:false"  #  view PDF in browser
-            )
-
+        doc_url = leave.document
         data.append({
             "id": leave.id,
             "employee": {
                 "id": leave.employee.id,
-                "name": getattr(leave.employee, "Full_Name", leave.employee.username),
+                "name": getattr(
+                    leave.employee, "Full_Name", leave.employee.username
+                ),
                 "email": leave.employee.email,
             },
             "full_name": leave.full_name,
             "email": leave.email,
             "leave_type": leave.leave_type,
             "status": leave.status,
-            "document_url": doc_url,  # FIXED
+            "document_url": doc_url,
             "submitted_at": (
                 leave.created_at.strftime("%Y-%m-%d %H:%M:%S")
                 if leave.created_at else None
@@ -644,7 +633,6 @@ def list_all_leaves_api(request):
         "success": True,
         "applications": data
     })
-
 
 # user leave ,List leave requests,specific one user by filtering id 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
