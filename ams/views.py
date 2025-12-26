@@ -543,42 +543,58 @@ def submit_leave_api(request):
     leave_type = request.data.get('leave_type')
     document = request.FILES.get('document')
 
-    # Validate
     if not leave_type or not full_name or not document:
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
-    # Upload directly to Cloudinary
-    # upload_result = cloudinary.uploader.upload(
-    #     document,
-    #     resource_type='raw',
-    #     access_mode="public",
-    #     folder='leave_docs'
-    # )
+    try:
+        # Let CloudinaryField handle the upload automatically
+        leave = LeaveRequest.objects.create(
+            employee=user,
+            full_name=full_name,
+            email=user.email,
+            leave_type=leave_type,
+            document=document  # CloudinaryField handles this
+        )
+        
+        # Get URL after save
+        doc_url = leave.document.url if leave.document else None
+        doc_filename = str(leave.document).split('/')[-1] if leave.document else None
+        
+        return Response({
+            'success': True,
+            'message': 'Leave request submitted successfully!',
+            'leave': {
+                'id': leave.id,
+                'employee': leave.full_name,
+                'email': leave.email,
+                'leave_type': leave.leave_type,
+                'status': leave.status,
+                'document_url': doc_url,
+                'document_filename': doc_filename
+            }
+        })
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Upload failed: {str(e)}'
+        }, status=500)
+    # doc_url = leave.document.url if leave.document else None
+    # doc_filename = str(leave.document).split('/')[-1] if leave.document else None
 
-    leave = LeaveRequest.objects.create(
-        employee=user,
-        full_name=full_name,
-        email=user.email,
-        leave_type=leave_type,
-        document=document  # FIXED: Use public_id, not 'leave_docs/'
-    )
-    doc_url = leave.document.url if leave.document else None
-    doc_filename = str(leave.document).split('/')[-1] if leave.document else None
-
-    # Return API response
-    return Response({
-        'success': True,
-        'message': 'Leave request submitted successfully!',
-        'leave': {
-            'id': leave.id, 
-            'employee': leave.full_name,
-            'email': leave.email,
-            'leave_type': leave.leave_type,
-            'status': leave.status,
-            'document_url': doc_url,  # FIXED: Use .url for full URL
-            'document_filename': doc_filename  # Bonus: filename
-        }
-    })
+    # # Return API response
+    # return Response({
+    #     'success': True,
+    #     'message': 'Leave request submitted successfully!',
+    #     'leave': {
+    #         'id': leave.id, 
+    #         'employee': leave.full_name,
+    #         'email': leave.email,
+    #         'leave_type': leave.leave_type,
+    #         'status': leave.status,
+    #         'document_url': doc_url,  # FIXED: Use .url for full URL
+    #         'document_filename': doc_filename  # Bonus: filename
+    #     }
+    # })
 
 # from rest_framework.parsers import MultiPartParser, FormParser
 # from rest_framework.decorators import api_view, permission_classes, parser_classes
@@ -728,61 +744,105 @@ def list_all_leaves_api(request):
     })
 
 # user leave ,List leave requests,specific one user by filtering id 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def user_leaves_api(request):
-    """
-    Admin API: 
-    - List all leave requests
-    - List leaves of a specific user (?user_id=<id>)
-    - Get a single leave by leave ID (?leave_id=<id>)
-    """
-    leave_id = request.query_params.get('leave_id')
-    user_id = request.query_params.get('user_id')
+def list_all_leaves_api(request):
+    user = request.user
+
+    # Only admin/staff can access
+    if not user.is_staff:
+        return Response(
+            {"success": False, "error": "Permission denied"},
+            status=403
+        )
 
     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
 
-    if leave_id:
-        try:
-            leave_id = int(leave_id)
-            leaves = leaves.filter(id=leave_id)
-        except ValueError:
-            return Response({"success": False, "error": "Invalid leave_id"}, status=status.HTTP_400_BAD_REQUEST)
-
-    if user_id:
-        try:
-            user_id = int(user_id)
-            leaves = leaves.filter(employee__id=user_id)
-        except ValueError:
-            return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
-
-    if not leaves.exists():
-        return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
-
     data = []
     for leave in leaves:
-        doc_url = leave.document.url if leave.document else None
+        # Since document is now a URLField, just use it directly
+        doc_url = leave.document if leave.document else None
+        
+        # Extract filename from URL
+        filename = None
+        if leave.document:
+            filename = leave.document.split('/')[-1]
 
         data.append({
             "id": leave.id,
             "employee": {
                 "id": leave.employee.id,
                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-                "email": leave.employee.email
+                "email": leave.employee.email,
             },
+            "full_name": leave.full_name,
+            "email": leave.email,
             "leave_type": leave.leave_type,
             "status": leave.status,
             "document_url": doc_url,
+            "document_filename": filename,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
-
         })
 
-    # If leave_id is provided, return a single object instead of a list
-    if leave_id:
-        return Response({"success": True, "leave": data[0]})
+    return Response({
+        "success": True,
+        "applications": data
+    })
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def user_leaves_api(request):
+#     """
+#     Admin API: 
+#     - List all leave requests
+#     - List leaves of a specific user (?user_id=<id>)
+#     - Get a single leave by leave ID (?leave_id=<id>)
+#     """
+#     leave_id = request.query_params.get('leave_id')
+#     user_id = request.query_params.get('user_id')
 
-    return Response({"success": True, "applications": data})
+#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
+
+#     if leave_id:
+#         try:
+#             leave_id = int(leave_id)
+#             leaves = leaves.filter(id=leave_id)
+#         except ValueError:
+#             return Response({"success": False, "error": "Invalid leave_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+#     if user_id:
+#         try:
+#             user_id = int(user_id)
+#             leaves = leaves.filter(employee__id=user_id)
+#         except ValueError:
+#             return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+#     if not leaves.exists():
+#         return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
+
+#     data = []
+#     for leave in leaves:
+#         doc_url = leave.document.url if leave.document else None
+
+#         data.append({
+#             "id": leave.id,
+#             "employee": {
+#                 "id": leave.employee.id,
+#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
+#                 "email": leave.employee.email
+#             },
+#             "leave_type": leave.leave_type,
+#             "status": leave.status,
+#             "document_url": doc_url,
+#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+
+#         })
+
+#     # If leave_id is provided, return a single object instead of a list
+#     if leave_id:
+#         return Response({"success": True, "leave": data[0]})
+
+#     return Response({"success": True, "applications": data})
 
 
 #------------------------------------------
