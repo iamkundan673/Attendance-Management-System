@@ -10,6 +10,5 @@ class AdduserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'role',
-            'profile_picture',
         ]
         read_only_fields = ['id', 'username']
