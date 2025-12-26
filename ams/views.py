@@ -533,14 +533,14 @@ def user_delete_api(request, user_id):
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 import cloudinary.uploader
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def submit_leave_api(request):
     user = request.user
-    full_name=request.data.get('full_name')
+    full_name = request.data.get('full_name')
     leave_type = request.data.get('leave_type')
-    # date = request.data.get('start_date')
     document = request.FILES.get('document')
 
     # Validate
@@ -548,13 +548,11 @@ def submit_leave_api(request):
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
     # Upload directly to Cloudinary
-    
     upload_result = cloudinary.uploader.upload(
         document,
         resource_type='raw',
         access_mode="public",
         folder='leave_docs'
-        
     )
 
     leave = LeaveRequest.objects.create(
@@ -562,20 +560,8 @@ def submit_leave_api(request):
         full_name=full_name,
         email=user.email,
         leave_type=leave_type,
-        document=upload_result['leave_docs/']  # store Cloudinary public_id
+        document=upload_result['public_id']  # FIXED: Use public_id, not 'leave_docs/'
     )
-    
-    # Notify admin (optional)
-    try:
-        send_mail(
-            subject=f"New Leave Request from {leave.full_name}",
-            message=f"Leave request submitted by {leave.full_name} ({leave.email}). Please review.",
-            from_email=leave.email,
-            recipient_list=[settings.ADMIN_EMAIL]
-        )
-    except:
-        # Ignore email errors for now
-        pass
 
     # Return API response
     return Response({
@@ -587,9 +573,71 @@ def submit_leave_api(request):
             'email': leave.email,
             'leave_type': leave.leave_type,
             'status': leave.status,
-            'document_url': leave.document
+            'document_url': leave.document.url,  # FIXED: Use .url for full URL
+            'document_filename': str(leave.document).split('/')[-1]  # Bonus: filename
         }
     })
+
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from rest_framework.decorators import api_view, permission_classes, parser_classes
+# import cloudinary.uploader
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# @parser_classes([MultiPartParser, FormParser])
+# def submit_leave_api(request):
+#     user = request.user
+#     full_name=request.data.get('full_name')
+#     leave_type = request.data.get('leave_type')
+#     # date = request.data.get('start_date')
+#     document = request.FILES.get('document')
+
+#     # Validate
+#     if not leave_type or not full_name or not document:
+#         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
+
+#     # Upload directly to Cloudinary
+    
+#     upload_result = cloudinary.uploader.upload(
+#         document,
+#         resource_type='raw',
+#         access_mode="public",
+#         folder='leave_docs'
+        
+#     )
+
+#     leave = LeaveRequest.objects.create(
+#         employee=user,
+#         full_name=full_name,
+#         email=user.email,
+#         leave_type=leave_type,
+#         document=upload_result['leave_docs/']  # store Cloudinary public_id
+#     )
+    
+    # Notify admin (optional)
+    # try:
+    #     send_mail(
+    #         subject=f"New Leave Request from {leave.full_name}",
+    #         message=f"Leave request submitted by {leave.full_name} ({leave.email}). Please review.",
+    #         from_email=leave.email,
+    #         recipient_list=[settings.ADMIN_EMAIL]
+    #     )
+    # except:
+    #     # Ignore email errors for now
+    #     pass
+
+    # Return API response
+    # return Response({
+    #     'success': True,
+    #     'message': 'Leave request submitted successfully!',
+    #     'leave': {
+    #         'id': leave.id, 
+    #         'employee': leave.full_name,
+    #         'email': leave.email,
+    #         'leave_type': leave.leave_type,
+    #         'status': leave.status,
+    #         'document_url': leave.document
+    #     }
+    # })
 #-----------------------------------------------------------
 # listing all the user leaves applications 
 # from cloudinary.utils import cloudinary_url
