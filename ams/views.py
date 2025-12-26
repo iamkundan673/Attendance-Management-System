@@ -552,7 +552,9 @@ def submit_leave_api(request):
     upload_result = cloudinary.uploader.upload(
         document,
         resource_type='raw',
+        access_mode="public",
         folder='leave_docs'
+        
     )
 
     leave = LeaveRequest.objects.create(
@@ -560,7 +562,7 @@ def submit_leave_api(request):
         full_name=full_name,
         email=user.email,
         leave_type=leave_type,
-        document=upload_result['secure_url']  # store Cloudinary public_id
+        document=upload_result['leave_docs/']  # store Cloudinary public_id
     )
     
     # Notify admin (optional)
@@ -590,7 +592,45 @@ def submit_leave_api(request):
     })
 #-----------------------------------------------------------
 # listing all the user leaves applications 
-from cloudinary.utils import cloudinary_url
+# from cloudinary.utils import cloudinary_url
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def list_all_leaves_api(request):
+#     user = request.user
+
+#     # Only admin/staff can access
+#     if not user.is_staff:
+#         return Response(
+#             {"success": False, "error": "Permission denied"},
+#             status=403
+#         )
+
+#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
+
+#     data = []
+#     for leave in leaves:
+#         # Get document URL from CloudinaryField
+#         doc_url = leave.document.url if leave.document else None
+
+#         data.append({
+#             "id": leave.id,
+#             "employee": {
+#                 "id": leave.employee.id,
+#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
+#                 "email": leave.employee.email,
+#             },
+#             "full_name": leave.full_name,
+#             "email": leave.email,
+#             "leave_type": leave.leave_type,
+#             "status": leave.status,
+#             "document_url": doc_url,
+#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+#         })
+
+#     return Response({
+#         "success": True,
+#         "applications": data
+#     })
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_leaves_api(request):
@@ -609,6 +649,12 @@ def list_all_leaves_api(request):
     for leave in leaves:
         # Get document URL from CloudinaryField
         doc_url = leave.document.url if leave.document else None
+        
+        # Extract filename from public_id (no imports needed)
+        filename = None
+        if leave.document:
+            public_id = str(leave.document)
+            filename = public_id.split('/')[-1] if '/' in public_id else public_id
 
         data.append({
             "id": leave.id,
@@ -622,6 +668,7 @@ def list_all_leaves_api(request):
             "leave_type": leave.leave_type,
             "status": leave.status,
             "document_url": doc_url,
+            "document_filename": filename,  # NEW: Extracted filename
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
         })
 
@@ -629,6 +676,7 @@ def list_all_leaves_api(request):
         "success": True,
         "applications": data
     })
+
 # user leave ,List leave requests,specific one user by filtering id 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 @api_view(['GET'])
