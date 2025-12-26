@@ -789,60 +789,60 @@ def list_all_leaves_api(request):
         "applications": data
     })
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def user_leaves_api(request):
-#     """
-#     Admin API: 
-#     - List all leave requests
-#     - List leaves of a specific user (?user_id=<id>)
-#     - Get a single leave by leave ID (?leave_id=<id>)
-#     """
-#     leave_id = request.query_params.get('leave_id')
-#     user_id = request.query_params.get('user_id')
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_leaves_api(request):
+    """
+    Admin API: 
+    - List all leave requests
+    - List leaves of a specific user (?user_id=<id>)
+    - Get a single leave by leave ID (?leave_id=<id>)
+    """
+    leave_id = request.query_params.get('leave_id')
+    user_id = request.query_params.get('user_id')
 
-#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
+    leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
 
-#     if leave_id:
-#         try:
-#             leave_id = int(leave_id)
-#             leaves = leaves.filter(id=leave_id)
-#         except ValueError:
-#             return Response({"success": False, "error": "Invalid leave_id"}, status=status.HTTP_400_BAD_REQUEST)
+    if leave_id:
+        try:
+            leave_id = int(leave_id)
+            leaves = leaves.filter(id=leave_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid leave_id"}, status=status.HTTP_400_BAD_REQUEST)
 
-#     if user_id:
-#         try:
-#             user_id = int(user_id)
-#             leaves = leaves.filter(employee__id=user_id)
-#         except ValueError:
-#             return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
+    if user_id:
+        try:
+            user_id = int(user_id)
+            leaves = leaves.filter(employee__id=user_id)
+        except ValueError:
+            return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
 
-#     if not leaves.exists():
-#         return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
+    if not leaves.exists():
+        return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
 
-#     data = []
-#     for leave in leaves:
-#         doc_url = leave.document.url if leave.document else None
+    data = []
+    for leave in leaves:
+        doc_url = leave.document.url if leave.document else None
 
-#         data.append({
-#             "id": leave.id,
-#             "employee": {
-#                 "id": leave.employee.id,
-#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-#                 "email": leave.employee.email
-#             },
-#             "leave_type": leave.leave_type,
-#             "status": leave.status,
-#             "document_url": doc_url,
-#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+        data.append({
+            "id": leave.id,
+            "employee": {
+                "id": leave.employee.id,
+                "name": getattr(leave.employee, "Full_Name", leave.employee.username),
+                "email": leave.employee.email
+            },
+            "leave_type": leave.leave_type,
+            "status": leave.status,
+            "document_url": doc_url,
+            "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
 
-#         })
+        })
 
-#     # If leave_id is provided, return a single object instead of a list
-#     if leave_id:
-#         return Response({"success": True, "leave": data[0]})
+    # If leave_id is provided, return a single object instead of a list
+    if leave_id:
+        return Response({"success": True, "leave": data[0]})
 
-#     return Response({"success": True, "applications": data})
+    return Response({"success": True, "applications": data})
 
 
 #------------------------------------------
