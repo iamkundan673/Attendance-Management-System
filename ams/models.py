@@ -84,8 +84,10 @@ class LeaveRequest(models.Model):
     # start_date = models.DateField()
     # end_date = models.DateField()
     document = CloudinaryField(
+        'document',
         resource_type='raw',  # important for PDFs and docs
         folder='leave_docs',
+        type='upload',
         null=True,
         blank=True
     )
