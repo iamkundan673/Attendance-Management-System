@@ -590,6 +590,7 @@ def submit_leave_api(request):
     })
 #-----------------------------------------------------------
 # listing all the user leaves applications 
+from cloudinary.utils import cloudinary_url
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_leaves_api(request):
@@ -607,28 +608,43 @@ def list_all_leaves_api(request):
     data = []
     for leave in leaves:
         # Cloudinary URL
-        doc_url = leave.document.url if leave.document else None
+        doc_url = None
+        if leave.document:
+            public_id = (
+                leave.document.public_id
+                if hasattr(leave.document, "public_id")
+                else leave.document
+            )
+
+            doc_url, _ = cloudinary_url(
+                public_id,
+                resource_type="raw",
+                flags="attachment:false"  #  view PDF in browser
+            )
 
         data.append({
             "id": leave.id,
             "employee": {
                 "id": leave.employee.id,
                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-                "leave_type":leave.leave_type,  # fallback to username
                 "email": leave.employee.email,
             },
             "full_name": leave.full_name,
             "email": leave.email,
             "leave_type": leave.leave_type,
             "status": leave.status,
-            "document_url": doc_url,
-            "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+            "document_url": doc_url,  # FIXED
+            "submitted_at": (
+                leave.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                if leave.created_at else None
+            )
         })
 
     return Response({
         "success": True,
         "applications": data
     })
+
 
 # user leave ,List leave requests,specific one user by filtering id 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
