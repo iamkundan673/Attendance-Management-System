@@ -83,7 +83,12 @@ class LeaveRequest(models.Model):
     leave_type = models.CharField(max_length=20, choices=LEAVE_CHOICES)
     # start_date = models.DateField()
     # end_date = models.DateField()
-    document = models.URLField(null=True, blank=True)
+    document = CloudinaryField(
+        resource_type='raw',  # important for PDFs and docs
+        folder='leave_docs',
+        null=True,
+        blank=True
+    )
     status = models.CharField(max_length=10, choices=[('pending','Pending'), ('approved','Approved'), ('rejected','Rejected')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     reject_reason = models.TextField(null=True, blank=True) 

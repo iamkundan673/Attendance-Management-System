@@ -607,15 +607,14 @@ def list_all_leaves_api(request):
 
     data = []
     for leave in leaves:
-        # Cloudinary URL
-        doc_url = leave.document
+        # Get document URL from CloudinaryField
+        doc_url = leave.document.url if leave.document else None
+
         data.append({
             "id": leave.id,
             "employee": {
                 "id": leave.employee.id,
-                "name": getattr(
-                    leave.employee, "Full_Name", leave.employee.username
-                ),
+                "name": getattr(leave.employee, "Full_Name", leave.employee.username),
                 "email": leave.employee.email,
             },
             "full_name": leave.full_name,
@@ -623,17 +622,13 @@ def list_all_leaves_api(request):
             "leave_type": leave.leave_type,
             "status": leave.status,
             "document_url": doc_url,
-            "submitted_at": (
-                leave.created_at.strftime("%Y-%m-%d %H:%M:%S")
-                if leave.created_at else None
-            )
+            "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
         })
 
     return Response({
         "success": True,
         "applications": data
     })
-
 # user leave ,List leave requests,specific one user by filtering id 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 @api_view(['GET'])
