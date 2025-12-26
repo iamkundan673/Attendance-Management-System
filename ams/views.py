@@ -544,13 +544,20 @@ def submit_leave_api(request):
     if not leave_type or not full_name or not document:
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
+    # Upload directly to Cloudinary
+    import cloudinary.uploader
+    upload_result = cloudinary.uploader.upload(
+        document,
+        resource_type='raw',
+        folder='leave_docs'
+    )
 
     leave = LeaveRequest.objects.create(
         employee=user,
         full_name=full_name,
         email=user.email,
         leave_type=leave_type,
-        document=document
+        document=upload_result['public_id']  # store Cloudinary public_id
     )
     
     # Notify admin (optional)
@@ -575,7 +582,7 @@ def submit_leave_api(request):
             'email': leave.email,
             'leave_type': leave.leave_type,
             'status': leave.status,
-            'document_url': request.build_absolute_uri(leave.document.url)
+            'document_url': cloudinary.utils.cloudinary_url(leave.document, resource_type='raw')[0]
         }
     })
 #-----------------------------------------------------------
