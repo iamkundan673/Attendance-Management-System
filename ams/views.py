@@ -697,51 +697,51 @@ def submit_leave_api(request):
 #         "success": True,
 #         "applications": data
 #     })
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_all_leaves_api(request):
-    user = request.user
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def list_all_leaves_api(request):
+#     user = request.user
 
-    # Only admin/staff can access
-    if not user.is_staff:
-        return Response(
-            {"success": False, "error": "Permission denied"},
-            status=403
-        )
+#     # Only admin/staff can access
+#     if not user.is_staff:
+#         return Response(
+#             {"success": False, "error": "Permission denied"},
+#             status=403
+#         )
 
-    leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
+#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
 
-    data = []
-    for leave in leaves:
-        # Get document URL from CloudinaryField
-        doc_url = leave.document.url if leave.document else None
+#     data = []
+#     for leave in leaves:
+#         # Get document URL from CloudinaryField
+#         doc_url = leave.document.url if leave.document else None
         
-        # Extract filename from public_id (no imports needed)
-        filename = None
-        if leave.document:
-            public_id = str(leave.document)
-            filename = public_id.split('/')[-1] if '/' in public_id else public_id
+#         # Extract filename from public_id (no imports needed)
+#         filename = None
+#         if leave.document:
+#             public_id = str(leave.document)
+#             filename = public_id.split('/')[-1] if '/' in public_id else public_id
 
-        data.append({
-            "id": leave.id,
-            "employee": {
-                "id": leave.employee.id,
-                "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-                "email": leave.employee.email,
-            },
-            "full_name": leave.full_name,
-            "email": leave.email,
-            "leave_type": leave.leave_type,
-            "status": leave.status,
-            "document_url": doc_url,
-            "document_filename": filename,  # NEW: Extracted filename
-            "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
-        })
+#         data.append({
+#             "id": leave.id,
+#             "employee": {
+#                 "id": leave.employee.id,
+#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
+#                 "email": leave.employee.email,
+#             },
+#             "full_name": leave.full_name,
+#             "email": leave.email,
+#             "leave_type": leave.leave_type,
+#             "status": leave.status,
+#             "document_url": doc_url,
+#             "document_filename": filename,  # NEW: Extracted filename
+#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
+#         })
 
-    return Response({
-        "success": True,
-        "applications": data
-    })
+#     return Response({
+#         "success": True,
+#         "applications": data
+#     })
 
 # user leave ,List leave requests,specific one user by filtering id 
 @api_view(['GET'])
@@ -761,11 +761,12 @@ def list_all_leaves_api(request):
     data = []
     for leave in leaves:
         # Since document is now a URLField, just use it directly
-        doc_url = leave.document if leave.document else None
+        doc_url = None
+        filename = None
         
         # Extract filename from URL
-        filename = None
         if leave.document:
+            doc_url = leave.document.url 
             filename = leave.document.split('/')[-1]
 
         data.append({
