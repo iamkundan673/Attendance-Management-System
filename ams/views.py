@@ -767,7 +767,7 @@ def list_all_leaves_api(request):
         # Extract filename from URL
         if leave.document:
             doc_url = leave.document.url 
-            filename = leave.document.split('/')[-1]
+            filename = leave.document.public_id.split('/')[-1]
 
         data.append({
             "id": leave.id,
