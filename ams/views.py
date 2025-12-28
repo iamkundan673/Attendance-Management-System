@@ -532,8 +532,6 @@ def user_delete_api(request, user_id):
 #-----------------------------------------------------------
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-import cloudinary.uploader
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
@@ -658,91 +656,6 @@ def submit_leave_api(request):
     # })
 #-----------------------------------------------------------
 # listing all the user leaves applications 
-# from cloudinary.utils import cloudinary_url
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def list_all_leaves_api(request):
-#     user = request.user
-
-#     # Only admin/staff can access
-#     if not user.is_staff:
-#         return Response(
-#             {"success": False, "error": "Permission denied"},
-#             status=403
-#         )
-
-#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
-
-#     data = []
-#     for leave in leaves:
-#         # Get document URL from CloudinaryField
-#         doc_url = leave.document.url if leave.document else None
-
-#         data.append({
-#             "id": leave.id,
-#             "employee": {
-#                 "id": leave.employee.id,
-#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-#                 "email": leave.employee.email,
-#             },
-#             "full_name": leave.full_name,
-#             "email": leave.email,
-#             "leave_type": leave.leave_type,
-#             "status": leave.status,
-#             "document_url": doc_url,
-#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
-#         })
-
-#     return Response({
-#         "success": True,
-#         "applications": data
-#     })
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def list_all_leaves_api(request):
-#     user = request.user
-
-#     # Only admin/staff can access
-#     if not user.is_staff:
-#         return Response(
-#             {"success": False, "error": "Permission denied"},
-#             status=403
-#         )
-
-#     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
-
-#     data = []
-#     for leave in leaves:
-#         # Get document URL from CloudinaryField
-#         doc_url = leave.document.url if leave.document else None
-        
-#         # Extract filename from public_id (no imports needed)
-#         filename = None
-#         if leave.document:
-#             public_id = str(leave.document)
-#             filename = public_id.split('/')[-1] if '/' in public_id else public_id
-
-#         data.append({
-#             "id": leave.id,
-#             "employee": {
-#                 "id": leave.employee.id,
-#                 "name": getattr(leave.employee, "Full_Name", leave.employee.username),
-#                 "email": leave.employee.email,
-#             },
-#             "full_name": leave.full_name,
-#             "email": leave.email,
-#             "leave_type": leave.leave_type,
-#             "status": leave.status,
-#             "document_url": doc_url,
-#             "document_filename": filename,  # NEW: Extracted filename
-#             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
-#         })
-
-#     return Response({
-#         "success": True,
-#         "applications": data
-#     })
-
 # user leave ,List leave requests,specific one user by filtering id 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -859,6 +772,8 @@ def leave_action_api(request, leave_id):
         return Response({'success': False, 'message': 'Permission denied.'}, status=403)
 
     action = request.data.get('action')  # expected 'approve' or 'reject'
+    reject_reason = request.data.get('reject_reason', '')
+
     if action not in ['approve', 'reject']:
         return Response({'success': False, 'message': 'Invalid action.'}, status=400)
 
@@ -867,17 +782,42 @@ def leave_action_api(request, leave_id):
     except LeaveRequest.DoesNotExist:
         return Response({'success': False, 'message': 'Leave not found.'}, status=404)
 
+     # =========================
+    # APPROVE
+    # =========================
+    if action == 'approve':
+        leave.status = 'approved'
+        leave.rejection_reason = None
+        email_message = (
+            f"Hello {leave.full_name},\n\n"
+            f"Your leave request ({leave.leave_type}) has been approved.\n\n"
+            f"Regards,\nHR Team"
+        )
+
+    # =========================
+    # REJECT
+    else:
+        if not reject_reason:
+            return Response({'success': False, 'message': 'Reject reason is required.'}, status=400)
+        leave.status = 'rejected'
+        leave.reject_reason = reject_reason
+        email_message = (
+            f"Hello {leave.full_name},\n\n"
+            f"Your leave request ({leave.leave_type}) has been rejected.\n\n"
+            f"Reason:\n{reject_reason}\n\n"
+            f"If you have questions, please contact HR.\n\n"
+            f"Regards,\nHR Team"
+        )
+
     # Update leave status
-    leave.status = 'approved' if action == 'approve' else 'rejected'
     leave.save()
 
     # Notify user via email
     try:
         send_mail(
             subject=f"Leave Request {leave.status.capitalize()}",
-            message=f"Hello {leave.full_name},\n\n"
-                    f"Your leave request ({leave.leave_type}) has been {leave.status}.",
-            from_email=None,  # will use DEFAULT_FROM_EMAIL
+            message=email_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,  # will use DEFAULT_FROM_EMAIL
             recipient_list=[leave.email],
             fail_silently=False,
         )
@@ -889,11 +829,6 @@ def leave_action_api(request, leave_id):
         'status':leave.status,
         'message': f'Leave {leave.status} successfully.'
     })  
-
-
-
-# images -----store,
-# leave details of the user
 
 # only admin sees the details of the 
 from django.db.models import Count, Q
