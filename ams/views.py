@@ -420,24 +420,30 @@ Please log in and change your password immediately.
 @csrf_exempt
 @api_view(["POST"])
 def upload_profile_picture_api(request, user_id):
-    try:
-        user = Adduser.objects.get(id=user_id)
-    except Adduser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    user = get_object_or_404(Adduser, id=user_id)
 
-    profile_picture = request.FILES.get('profile_picture')
+    profile_picture = request.FILES.get("profile_picture")
     if not profile_picture:
-        return JsonResponse({'success': False, 'error': 'No profile picture provided'}, status=400)
+        return Response(
+            {"success": False, "error": "No profile picture provided"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Optional: validate image type
+    if not profile_picture.content_type.startswith("image/"):
+        return Response(
+            {"success": False, "error": "Only image files are allowed"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     user.profile_picture = profile_picture
     user.save()
 
-    return JsonResponse({
-        'success': True,
-        'message': 'Profile picture uploaded successfully',
-        'profile_picture_url': request.build_absolute_uri(user.profile_picture.url)
-    })
-
+    return Response({
+        "success": True,
+        "message": "Profile picture uploaded successfully",
+        "profile_picture_url": user.profile_picture.url
+    }, status=status.HTTP_200_OK)
 
 
 #---------------------------------------

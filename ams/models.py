@@ -13,7 +13,12 @@ class Adduser(AbstractUser):
     password = models.CharField(max_length=128)
     token = models.CharField(max_length=64, blank=True, null=True)
 
-    profile_picture =  CloudinaryField(resource_type='image',folder='leave_images',null=True,blank=True)
+    profile_picture = CloudinaryField(
+        'profile_picture',
+        resource_type='image',
+        null=True,
+        blank=True
+    )
 
 
     ROLE_CHOICES=[
