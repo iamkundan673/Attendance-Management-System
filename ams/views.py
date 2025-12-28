@@ -793,7 +793,7 @@ def leave_action_api(request, leave_id):
     # =========================
     if action == 'approve':
         leave.status = 'approved'
-        leave.rejection_reason = None
+        leave.reject_reason = None
         email_message = (
             f"Hello {leave.full_name},\n\n"
             f"Your leave request ({leave.leave_type}) has been approved.\n\n"
@@ -825,7 +825,7 @@ def leave_action_api(request, leave_id):
             message=email_message,
             from_email=settings.DEFAULT_FROM_EMAIL,  # will use DEFAULT_FROM_EMAIL
             recipient_list=[leave.email],
-            fail_silently=False,
+            fail_silently=True,
         )
     except Exception as e:
         print(f"Failed to send email to {leave.email}: {e}")
