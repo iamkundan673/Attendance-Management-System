@@ -699,6 +699,7 @@ def list_all_leaves_api(request):
             "email": leave.email,
             "leave_type": leave.leave_type,
             "status": leave.status,
+            ""
             "document_url": doc_url,
             "document_filename": filename,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
@@ -753,6 +754,7 @@ def user_leaves_api(request):
             },
             "leave_type": leave.leave_type,
             "status": leave.status,
+            "reject_reason": leave.reject_reason,
             "document_url": doc_url,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
 

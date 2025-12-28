@@ -256,16 +256,10 @@ ADMIN_EMAIL = "kundanchapagain555@gmail.com"
 #email setting 
 import os
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
-
-EMAIL_HOST = os.environ.get("EMAIL_HOST")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS") == "True"
-
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
+EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")  # store in .env and load with os.environ
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False      # True only for testing
+DEFAULT_FROM_EMAIL = "kundanchapagain555@gmail.com"
 
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
