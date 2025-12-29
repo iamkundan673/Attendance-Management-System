@@ -16,6 +16,7 @@ class Adduser(AbstractUser):
     profile_picture = CloudinaryField(
         'profile_picture',
         resource_type='image',
+        folder='profile_pictures',
         null=True,
         blank=True
     )

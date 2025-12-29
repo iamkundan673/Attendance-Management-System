@@ -417,7 +417,8 @@ Please log in and change your password immediately.
     })
 #----------------------------------------
 # add profile picture of user
-@csrf_exempt
+from cloudinary.uploader import destroy
+@permission_classes([IsAuthenticated])
 @api_view(["POST"])
 def upload_profile_picture_api(request, user_id):
     user = get_object_or_404(Adduser, id=user_id)
@@ -435,6 +436,8 @@ def upload_profile_picture_api(request, user_id):
             {"success": False, "error": "Only image files are allowed"},
             status=status.HTTP_400_BAD_REQUEST
         )
+    if user.profile_picture:
+        destroy(user.profile_picture.public_id)
 
     user.profile_picture = profile_picture
     user.save()
