@@ -419,11 +419,18 @@ Please log in and change your password immediately.
 #----------------------------------------
 # add profile picture of user
 from cloudinary.uploader import destroy
-# @permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 @api_view(["POST"])
 def upload_profile_picture_api(request, user_id):
     user = get_object_or_404(Adduser, id=user_id)
+
+    # Only allow the user themselves or admin
+    if request.user != user and not request.user.is_staff:
+        return Response(
+            {"success": False, "error": "Permission denied"},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
     profile_picture = request.FILES.get("profile_picture")
     if not profile_picture:
@@ -432,12 +439,12 @@ def upload_profile_picture_api(request, user_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Optional: validate image type
     if not profile_picture.content_type.startswith("image/"):
         return Response(
             {"success": False, "error": "Only image files are allowed"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
     if user.profile_picture:
         destroy(user.profile_picture.public_id)
 
@@ -452,9 +459,13 @@ def upload_profile_picture_api(request, user_id):
 
 #view of user profile picture
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_profile_picture_api(request, user_id):
     user = get_object_or_404(Adduser, id=user_id)
+
+    # Optional: allow only user themselves or admin
+    if request.user != user and not request.user.is_staff:
+        return Response({"success": False, "error": "Permission denied"}, status=403)
 
     if not user.profile_picture:
         return Response(
@@ -466,7 +477,6 @@ def get_profile_picture_api(request, user_id):
         "success": True,
         "profile_picture_url": user.profile_picture.url
     }, status=status.HTTP_200_OK)
-
 
 #---------------------------------------
 # edit user ,role ra status like active or disable garcha admin le
