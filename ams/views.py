@@ -18,6 +18,7 @@ from rest_framework import status
 from .serializer import AdduserSerializer
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
+from rest_framework.parsers import MultiPartParser, FormParser
 
 #--------------------------
 # user login 
@@ -540,7 +541,7 @@ def user_delete_api(request, user_id):
 #-----------------------------------------------------------
 # subbmiting the leave 
 #-----------------------------------------------------------
-from rest_framework.parsers import MultiPartParser, FormParser
+
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
