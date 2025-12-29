@@ -419,7 +419,7 @@ Please log in and change your password immediately.
 #----------------------------------------
 # add profile picture of user
 from cloudinary.uploader import destroy
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 @api_view(["POST"])
 def upload_profile_picture_api(request, user_id):
@@ -459,7 +459,7 @@ def upload_profile_picture_api(request, user_id):
 
 #view of user profile picture
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_profile_picture_api(request, user_id):
     user = get_object_or_404(Adduser, id=user_id)
 
