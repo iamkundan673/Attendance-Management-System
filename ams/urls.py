@@ -47,6 +47,7 @@ urlpatterns = [
     path('hocreate/',views.holiday_create_api,name='holiday_create_api'),
     path('listholiday/',views.holiday_list_api,name='holiday_list_api'),
     path('delholiday/date/',views.holiday_delete_api,name='holiday_delete_api'),
+    path('viewprofile/<int:user_id>/',views.get_profile_picture_api,name='get_profile_picture_api'),
 
     # path('ip/', views.ipcheck, name='edi'), 
     # path('ams/', include('ams.urls')),

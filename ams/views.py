@@ -450,6 +450,23 @@ def upload_profile_picture_api(request, user_id):
         "profile_picture_url": user.profile_picture.url
     }, status=status.HTTP_200_OK)
 
+#view of user profile picture
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile_picture_api(request, user_id):
+    user = get_object_or_404(Adduser, id=user_id)
+
+    if not user.profile_picture:
+        return Response(
+            {"success": False, "error": "User has no profile picture"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    return Response({
+        "success": True,
+        "profile_picture_url": user.profile_picture.url
+    }, status=status.HTTP_200_OK)
+
 
 #---------------------------------------
 # edit user ,role ra status like active or disable garcha admin le
