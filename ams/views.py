@@ -422,16 +422,10 @@ from cloudinary.uploader import destroy
 @permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 @api_view(["POST"])
-def upload_profile_picture_api(request, user_id):
-    user = get_object_or_404(Adduser, id=user_id)
+def upload_profile_picture_api(request):
+    user = get_object_or_404(Adduser, id=request.user.id)
 
     # Only allow the user themselves or admin
-    if request.user != user and not request.user.is_staff:
-        return Response(
-            {"success": False, "error": "Permission denied"},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
     profile_picture = request.FILES.get("profile_picture")
     if not profile_picture:
         return Response(
