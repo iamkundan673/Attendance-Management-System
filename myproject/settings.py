@@ -159,7 +159,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 ALLOWED_ATTENDANCE_IPS = [
-    "27.34.111.37",  # your office/campus static public IP
+    "27.34.111.32",  # your office/campus static public IP
 ]
 
 # settings.py
