@@ -586,6 +586,12 @@ def edit_user_api(request, user_id):
     if 'is_active' in data:
         user.is_active = data['is_active']
 
+    if 'email' in data:
+        user.email = data['email']
+
+    if 'contact_number' in data:
+        user.contact_number = data['contact_number']
+
     if 'role' in data:
         if data['role'] in dict(Adduser.ROLE_CHOICES):
             user.role = data['role']
@@ -601,7 +607,8 @@ def edit_user_api(request, user_id):
             'username': user.username,
             'email': user.email,
             'is_active': user.is_active,
-            'role': user.role
+            'role': user.role,
+            'contact_number': user.contact_number,
         }
     })
 
