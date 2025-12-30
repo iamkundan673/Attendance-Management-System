@@ -419,13 +419,19 @@ Please log in and change your password immediately.
 #----------------------------------------
 # add profile picture of user
 from cloudinary.uploader import destroy
-@permission_classes([AllowAny])
-@parser_classes([MultiPartParser, FormParser])
 @api_view(["POST"])
-def upload_profile_picture_api(request):
-    user = get_object_or_404(Adduser, id=request.user.id)
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_profile_picture_api(request, user_id):
+    target_user = get_object_or_404(Adduser, id=user_id)
 
-    # Only allow the user themselves or admin
+    # 🔒 Permission rules
+    if request.user != target_user and not request.user.is_staff:
+        return Response(
+            {"success": False, "error": "You are not allowed to update this profile"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     profile_picture = request.FILES.get("profile_picture")
     if not profile_picture:
         return Response(
@@ -439,18 +445,18 @@ def upload_profile_picture_api(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if user.profile_picture:
-        destroy(user.profile_picture.public_id)
+    # Remove old picture
+    if target_user.profile_picture:
+        destroy(target_user.profile_picture.public_id)
 
-    user.profile_picture = profile_picture
-    user.save()
+    target_user.profile_picture = profile_picture
+    target_user.save()
 
     return Response({
         "success": True,
         "message": "Profile picture uploaded successfully",
-        "profile_picture_url": user.profile_picture.url
-    }, status=status.HTTP_200_OK)
-
+        "profile_picture_url": target_user.profile_picture.url
+    })
 #view of user profile picture
 @api_view(["GET"])
 @permission_classes([AllowAny])
