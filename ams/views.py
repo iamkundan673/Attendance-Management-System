@@ -136,8 +136,10 @@ def dashboard_api(request):
             'userId': user.id,       # matches frontend's userId field
             'username': getattr(user, 'username', ''),  # matches frontend's name
             'email': user.email,
+            'contactNumber': getattr(user, 'contact_number', ''),  # optional, if you have this field
             'role': getattr(user, 'role', ''),  # optional, if you have a role field
-            'employeeId': getattr(user, 'employeeId', ''),  # optional
+            'address': getattr(user, 'address', ''), 
+            'employee_id': getattr(user, 'employee_id', ''), 
             
         },
         'success': True
@@ -400,16 +402,14 @@ def create_user_api(request):
         username=username,
         email=email,
         password=temp_password,
-        contact_number=contact_number,
-        address=address,
-        employee_id=employee_id
     )
+
 
     user.Full_Name = Full_Name
     user.role = role
-    user.contact_number = contact_number
-    user.address = address
-    user.employee_id = employee_id
+    user.contact_number=contact_number
+    user.address=address
+    user.employee_id=employee_id
     user.is_staff = False
     user.is_superuser = False
     user.is_active = True
@@ -446,7 +446,7 @@ from cloudinary.uploader import destroy
 def upload_profile_picture_api(request, user_id):
     target_user = get_object_or_404(Adduser, id=user_id)
 
-    # 🔒 Permission rules
+    #  Permission rules
     if request.user != target_user and not request.user.is_staff:
         return Response(
             {"success": False, "error": "You are not allowed to update this profile"},
