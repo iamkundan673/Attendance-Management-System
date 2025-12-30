@@ -10,5 +10,8 @@ class AdduserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'role',
+            'contact_number',
+            'address',
+            'employee_id',
         ]
-        read_only_fields = ['id', 'username']
+        read_only_fields = ['id', 'username', 'employee_id']

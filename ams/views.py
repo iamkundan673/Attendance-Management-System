@@ -363,12 +363,24 @@ def create_user_api(request):
     Full_Name = data.get("fullname") or data.get("Full_Name")
     email = data.get("email")
     role = data.get("role", "")
+    contact_number = data.get("contact_number", "")
+    address = data.get("address", "")
+    employee_id = data.get("employee_id", "")
 
     if not email:
         return Response({"detail": "Email is required"}, status=400)
 
     if not Full_Name:
         return Response({"detail": "Fullname is required"}, status=400)
+    
+    if not employee_id:
+        return Response({"detail": "Employee ID is required"}, status=400)
+    
+    if not contact_number:
+        return Response({"detail": "Contact number is required"}, status=400)
+    
+    if not address:
+        return Response({"detail": "Address is required"}, status=400)
 
     username = email.split("@")[0]
 
@@ -377,6 +389,9 @@ def create_user_api(request):
 
     if User.objects.filter(email=email).exists():
         return Response({"detail": "Email already exists"}, status=400)
+    
+    if User.objects.filter(employee_id=employee_id).exists():
+        return Response({"detail": "Employee ID already exists"}, status=400)
 
     temp_password = generate_temp_password()
 
@@ -384,11 +399,17 @@ def create_user_api(request):
     user = User.objects.create_user(
         username=username,
         email=email,
-        password=temp_password
+        password=temp_password,
+        contact_number=contact_number,
+        address=address,
+        employee_id=employee_id
     )
 
     user.Full_Name = Full_Name
     user.role = role
+    user.contact_number = contact_number
+    user.address = address
+    user.employee_id = employee_id
     user.is_staff = False
     user.is_superuser = False
     user.is_active = True
