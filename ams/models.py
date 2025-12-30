@@ -81,7 +81,8 @@ from django.contrib.auth.models import AbstractUser
 LEAVE_CHOICES = [
     ('sick', 'Sick Leave'),
     ('casual', 'Casual Leave'),
-    ('earned', 'Earned Leave'),
+    ('paid', 'paid Leave'),
+    ('unpaid', 'unpaid Leave'),
 ]
 
 # leave request model
@@ -90,8 +91,8 @@ class LeaveRequest(models.Model):
     full_name = models.CharField(max_length=255)
     email = models.EmailField()
     leave_type = models.CharField(max_length=20, choices=LEAVE_CHOICES)
-    # start_date = models.DateField()
-    # end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     document = CloudinaryField(
         'document',
         resource_type='raw',  # important for PDFs and docs
@@ -103,6 +104,8 @@ class LeaveRequest(models.Model):
     status = models.CharField(max_length=10, choices=[('pending','Pending'), ('approved','Approved'), ('rejected','Rejected')], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     reject_reason = models.TextField(null=True, blank=True) 
+    reason = models.TextField(null=True, blank=True)
+    alternate_contact = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.leave_type} - {self.status}"

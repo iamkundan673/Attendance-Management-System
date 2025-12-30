@@ -665,18 +665,25 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 @parser_classes([MultiPartParser, FormParser])
 def submit_leave_api(request):
     user = request.user
-    full_name = request.data.get('full_name')
+    # full_name = request.data.get('full_name')
     leave_type = request.data.get('leave_type')
+    start_date = request.data.get('start_date')
+    end_date = request.data.get('end_date')
+    reason = request.data.get('reason')
+    alternate_contact = request.data.get('alternate_contact')
     document = request.FILES.get('document')
 
-    if not leave_type or not full_name or not document:
+    if not leave_type  or not start_date or not end_date or not reason:
         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
 
     try:
         # Let CloudinaryField handle the upload automatically
         leave = LeaveRequest.objects.create(
             employee=user,
-            full_name=full_name,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason,
+            alternate_contact=alternate_contact,
             email=user.email,
             leave_type=leave_type,
             document=document  # CloudinaryField handles this
@@ -693,6 +700,10 @@ def submit_leave_api(request):
                 'id': leave.id,
                 'employee': leave.full_name,
                 'email': leave.email,
+                'start_date': leave.start_date,
+                'end_date': leave.end_date,
+                'reason': leave.reason,
+                'alternate_contact': leave.alternate_contact,
                 'leave_type': leave.leave_type,
                 'status': leave.status,
                 'document_url': doc_url,
