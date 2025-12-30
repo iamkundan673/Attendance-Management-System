@@ -160,7 +160,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 ALLOWED_ATTENDANCE_IPS = [
-    "27.34.111.32",  # your office/campus static public IP
+    "27.34.111.124",  # your office/campus static public IP
 ]
 
 # settings.py
@@ -170,7 +170,7 @@ from datetime import time
 
 # settings.py
 ATTENDANCE_START_TIME = time(9, 0)   # 9:00 AM
-ATTENDANCE_END_TIME = time(10, 30)    # 10:30 AM
+ATTENDANCE_END_TIME = time(11, 30)    # 10:30 AM
 
 
 # Database
