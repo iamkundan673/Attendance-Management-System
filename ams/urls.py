@@ -20,12 +20,18 @@ from django.contrib import admin
 from django.urls import path,include
 from . import views
 from django.http import HttpResponse
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 def home(request):
     return HttpResponse("Attendance System is live!")
 
 urlpatterns = [
     path('',home,name='home'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('login/',views.user_login_api,name="user_login_api"),
     path('dashboard/', views.dashboard_api, name='user-dashboard'),
     path('attendance/', views.attendance_api, name='mark_attendance'),
