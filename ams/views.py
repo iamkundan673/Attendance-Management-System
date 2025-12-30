@@ -680,6 +680,7 @@ def submit_leave_api(request):
         # Let CloudinaryField handle the upload automatically
         leave = LeaveRequest.objects.create(
             employee=user,
+            full_name=user.Full_Name,
             start_date=start_date,
             end_date=end_date,
             reason=reason,
@@ -830,6 +831,10 @@ def list_all_leaves_api(request):
             },
             "full_name": leave.full_name,
             "email": leave.email,
+            "start_date": leave.start_date,
+            "end_date": leave.end_date,
+            "reason": leave.reason,
+            "alternate_contact": leave.alternate_contact,
             "leave_type": leave.leave_type,
             "status": leave.status,
             "reject_reason": leave.reject_reason,
@@ -887,6 +892,10 @@ def user_leaves_api(request):
             },
             "leave_type": leave.leave_type,
             "status": leave.status,
+            "start_date": leave.start_date,
+            "end_date": leave.end_date,
+            "reason": leave.reason,
+            "alternate_contact": leave.alternate_contact,
             "reject_reason": leave.reject_reason,
             "document_url": doc_url,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
