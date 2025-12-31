@@ -145,48 +145,7 @@ def dashboard_api(request):
         'success': True
     })
 
-#----------------------tei mark attendence ho 
-# @csrf_exempt
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def attendance_api(request):
-#     user = request.user
-#     user_ip = get_client_ip(request)
-
-#     # Check if user is in the office network
-#     if not is_in_office_network(user_ip):
-#         return Response({'success': False, 'error': 'You are not in the office network'}, status=403)
-
-#     # Check if already marked today
-#     today = date.today()
-#     if Attendance.objects.filter(user=user, date=today).exists():
-#         return Response({'success': False, 'error': 'Attendance already marked today.'})
-
-#     # Determine status based on check-in time
-#     current_time = datetime.now().time()
-#     status = "On Time" if current_time <= datetime.strptime("09:30:00", "%H:%M:%S").time() else "Late"
-
-#     # Save attendance
-#     attendance = Attendance.objects.create(
-#         user=user,
-#         ip_address=user_ip,
-#         status=status,
-#         date=today,
-#         check_in_time=timezone.now()
-#     )
-
-#     return Response({
-#         'success': True,
-#         'attendance': {
-#             'sn': attendance.id,
-#             'date': attendance.date.strftime("%m/%d/%Y"),
-#             'time': attendance.check_in_time.strftime("%H:%M:%S %p"),
-#             'ip': attendance.ip_address,
-#             'status': attendance.status
-#         }
-#     })
-
-
+#---mark attendence ho
 def is_within_time_window():
     now = datetime.now().time()  # current server time
     return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
@@ -226,7 +185,6 @@ def attendance_api(request):
         date=today,
         check_in_time=timezone.now()
     )
-
     return Response({
         'success': True,
         'attendance': {
@@ -239,8 +197,9 @@ def attendance_api(request):
         }
     }) 
 
-#------------------------------
+#------------------------------------
 # auto mark attendence absent function
+#-------------------------------------
 def auto_mark_absent(request, secret_key):
     if secret_key != settings.AUTO_MARK_SECRET:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
@@ -255,7 +214,7 @@ def auto_mark_absent(request, secret_key):
     updated_count = 0
 
     for user in users:
-        # ❌ Do NOT create attendance here
+        #  Do NOT create attendance here
         attendance = Attendance.objects.filter(user=user, date=today).first()
 
         # If attendance exists and already present → skip
@@ -269,7 +228,7 @@ def auto_mark_absent(request, secret_key):
                 date=today,
                 attendance_status=Attendance.ATT_ABSENT,
                 status="Absent",
-                check_in_time=None,
+                # check_in_time=None,
                 ip_address=None
             )
             updated_count += 1
