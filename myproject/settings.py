@@ -160,7 +160,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 ALLOWED_ATTENDANCE_IPS = [
-    "27.34.111.124",  # your office/campus static public IP
+    "27.34.111.65",  # your office/campus static public IP
 ]
 
 # settings.py
@@ -172,7 +172,8 @@ from datetime import time
 ATTENDANCE_START_TIME = time(9, 0)   # 9:00 AM
 ATTENDANCE_END_TIME = time(11, 30)    # 10:30 AM
 
-
+# Secret key for auto-mark endpoint
+AUTO_MARK_SECRET = "attend-2025-9f8a2cX!@"  # store in environment variable in production
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 

@@ -35,6 +35,7 @@ urlpatterns = [
     path('login/',views.user_login_api,name="user_login_api"),
     path('dashboard/', views.dashboard_api, name='user-dashboard'),
     path('attendance/', views.attendance_api, name='mark_attendance'),
+    path("auto-mark-absent/<str:secret_key>/", views.auto_mark_absent, name="auto_mark_absent"),
     path('history/', views.attendance_history_api, name='attendance_history_api'),
     path('crt/', views.create_user_api, name='get_client_ip_view'),
     path('view/', views.user_list_api, name='user_list_api'),
