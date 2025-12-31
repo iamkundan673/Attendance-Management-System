@@ -242,33 +242,37 @@ def attendance_api(request):
 #------------------------------
 # auto mark attendence absent function
 def auto_mark_absent(request, secret_key):
-    # Protect endpoint with secret key
     if secret_key != settings.AUTO_MARK_SECRET:
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
     today = date.today()
 
-    # Skip holiday and weekend
-    if is_holiday(today) or today.weekday() >= 5:  # Saturday=5, Sunday=6
+    # Skip holiday & weekend
+    if is_holiday(today) or today.weekday() >= 5:
         return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
 
     users = Adduser.objects.all()
     updated_count = 0
 
     for user in users:
-        attendance, created = Attendance.objects.get_or_create(user=user, date=today)
+        # ❌ Do NOT create attendance here
+        attendance = Attendance.objects.filter(user=user, date=today).first()
 
-        # Skip users already marked present
-        if attendance.attendance_status == Attendance.ATT_PRESENT:
+        # If attendance exists and already present → skip
+        if attendance and attendance.attendance_status == Attendance.ATT_PRESENT:
             continue
 
-        # Mark absent
-        attendance.attendance_status = Attendance.ATT_ABSENT
-        attendance.status = "Absent"
-        attendance.check_in_time = None
-        attendance.ip_address = None
-        attendance.save()
-        updated_count += 1
+        # If no attendance exists → create ABSENT record
+        if not attendance:
+            Attendance.objects.create(
+                user=user,
+                date=today,
+                attendance_status=Attendance.ATT_ABSENT,
+                status="Absent",
+                check_in_time=None,
+                ip_address=None
+            )
+            updated_count += 1
 
     return JsonResponse({
         'status': 'Auto-mark absent completed',
