@@ -4,14 +4,14 @@ from rest_framework.response import Response
 from django.contrib.auth.hashers import check_password,make_password
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Adduser,Attendance,LeaveRequest
+from .models import Adduser,Attendance,LeaveRequest,Holiday
 import json
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from django.utils import timezone
 from .utils import get_client_ip, is_holiday
-from datetime import date, datetime
+from datetime import date, datetime,timedelta
 from django.conf import settings
 import os
 from rest_framework import status 
@@ -19,7 +19,9 @@ from .serializer import AdduserSerializer
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from django.db.models import Count, Q
+from cloudinary.uploader import destroy
+from django.shortcuts import get_object_or_404
 #--------------------------
 # user login 
 #--------------------------
@@ -150,7 +152,7 @@ def is_within_time_window():
     now = datetime.now().time()  # current server time
     return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
 
-from .models import Holiday
+
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -259,32 +261,10 @@ def attendance_history_api(request):
     ]
 
     return Response({'success': True, 'records': data})
-#------------------------------
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def attendance_history(request):
-#     user = request.user
-#     records = Attendance.objects.filter(user=user).order_by('-date')  # latest first
-
-#     data = [
-#         {
-#             'sn': idx + 1,
-#             'id':id,
-#             'date': att.date.strftime("%m/%d/%Y"),
-#             'time': att.check_in_time.strftime("%H:%M:%S %p"),
-#             'ip': att.ip_address,
-#             'status': att.status
-#         }
-#         for idx, att in enumerate(records)
-#     ]
-#     return Response({'success': True, 'records': data})
-
 #-----------------------------------------------
 #specific user attendence filter according to user id
-from django.shortcuts import get_object_or_404
-# from django.contrib.auth.models import Adduser
-from .models import Adduser
 
+# from django.contrib.auth.models import Adduser
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # or add IsAdminUser for security
 def attendance_by_user(request, user_id):
@@ -316,9 +296,6 @@ def attendance_by_user(request, user_id):
         'records': data
     })
 
-
-
-
 # user attendence history for admin, for listing all
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -345,7 +322,6 @@ def all_attendance_api(request):
     return Response({'success': True, 'records': data})
  
 #--------------------------------------------------#
-
 # user banaune by admin
 def generate_temp_password(length=8):
     import secrets, string
@@ -402,8 +378,6 @@ def create_user_api(request):
         email=email,
         password=temp_password,
     )
-
-
     user.Full_Name = Full_Name
     user.role = role
     user.contact_number=contact_number
@@ -438,7 +412,6 @@ Please log in and change your password immediately.
     })
 #----------------------------------------
 # add profile picture of user
-from cloudinary.uploader import destroy
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
@@ -595,8 +568,6 @@ def user_delete_api(request, user_id):
 #-----------------------------------------------------------
 # subbmiting the leave 
 #-----------------------------------------------------------
-
-from rest_framework.decorators import api_view, permission_classes, parser_classes
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
@@ -653,84 +624,6 @@ def submit_leave_api(request):
             'success': False,
             'message': f'Upload failed: {str(e)}'
         }, status=500)
-    # doc_url = leave.document.url if leave.document else None
-    # doc_filename = str(leave.document).split('/')[-1] if leave.document else None
-
-    # # Return API response
-    # return Response({
-    #     'success': True,
-    #     'message': 'Leave request submitted successfully!',
-    #     'leave': {
-    #         'id': leave.id, 
-    #         'employee': leave.full_name,
-    #         'email': leave.email,
-    #         'leave_type': leave.leave_type,
-    #         'status': leave.status,
-    #         'document_url': doc_url,  # FIXED: Use .url for full URL
-    #         'document_filename': doc_filename  # Bonus: filename
-    #     }
-    # })
-
-# from rest_framework.parsers import MultiPartParser, FormParser
-# from rest_framework.decorators import api_view, permission_classes, parser_classes
-# import cloudinary.uploader
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# @parser_classes([MultiPartParser, FormParser])
-# def submit_leave_api(request):
-#     user = request.user
-#     full_name=request.data.get('full_name')
-#     leave_type = request.data.get('leave_type')
-#     # date = request.data.get('start_date')
-#     document = request.FILES.get('document')
-
-#     # Validate
-#     if not leave_type or not full_name or not document:
-#         return Response({'success': False, 'message': 'All fields are required.'}, status=400)
-
-#     # Upload directly to Cloudinary
-    
-#     upload_result = cloudinary.uploader.upload(
-#         document,
-#         resource_type='raw',
-#         access_mode="public",
-#         folder='leave_docs'
-        
-#     )
-
-#     leave = LeaveRequest.objects.create(
-#         employee=user,
-#         full_name=full_name,
-#         email=user.email,
-#         leave_type=leave_type,
-#         document=upload_result['leave_docs/']  # store Cloudinary public_id
-#     )
-    
-    # Notify admin (optional)
-    # try:
-    #     send_mail(
-    #         subject=f"New Leave Request from {leave.full_name}",
-    #         message=f"Leave request submitted by {leave.full_name} ({leave.email}). Please review.",
-    #         from_email=leave.email,
-    #         recipient_list=[settings.ADMIN_EMAIL]
-    #     )
-    # except:
-    #     # Ignore email errors for now
-    #     pass
-
-    # Return API response
-    # return Response({
-    #     'success': True,
-    #     'message': 'Leave request submitted successfully!',
-    #     'leave': {
-    #         'id': leave.id, 
-    #         'employee': leave.full_name,
-    #         'email': leave.email,
-    #         'leave_type': leave.leave_type,
-    #         'status': leave.status,
-    #         'document_url': leave.document
-    #     }
-    # })
 #-----------------------------------------------------------
 # listing all the user leaves applications 
 # user leave ,List leave requests,specific one user by filtering id 
@@ -845,11 +738,9 @@ def user_leaves_api(request):
 
     return Response({"success": True, "applications": data})
 
-
 #------------------------------------------
 #leave request approve and reject by adimn
 #------------------------------------------
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -898,7 +789,6 @@ def leave_action_api(request, leave_id):
 
     # Update leave status
     leave.save()
-
     # Notify user via email
     try:
         send_mail(
@@ -916,13 +806,7 @@ def leave_action_api(request, leave_id):
         'status':leave.status,
         'message': f'Leave {leave.status} successfully.'
     })  
-
 # only admin sees the details of the 
-from django.db.models import Count, Q
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def present_absent_summary_api(request):
@@ -948,13 +832,7 @@ def present_absent_summary_api(request):
         "data": summary
     })
 
-
 # making the view for the only one user details of the user 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Attendance
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def my_attendance_summary_api(request):
@@ -978,10 +856,8 @@ def my_attendance_summary_api(request):
         "total_days": present_days + absent_days
     })
 
-
 #-----------------------------------------------------------#
 # inserting holidays by admin
-from datetime import datetime
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -1018,10 +894,8 @@ def holiday_create_api(request):
             "description": holiday.description
         }
     }, status=201)
-
 #-----------------------------------------------------------#
 # Getting all the holidays
-from .models import Holiday
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def holiday_list_api(request):
@@ -1044,11 +918,8 @@ def holiday_list_api(request):
         "success": True,
         "holidays": data
     })
-
 #-----------------------------------------------------------#
 # delete holiday by admin
-from datetime import timedelta, datetime
-
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def holiday_delete_api(request):
