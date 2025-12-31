@@ -593,7 +593,7 @@ def edit_user_api(request, user_id):
         user.contact_number = data['contact_number']
 
     if 'role' in data:
-        if data['role'] in dict(Adduser.ROLE_CHOICES):
+        if data['role'] in dict(Adduser.ROLE_CHOICES): 
             user.role = data['role']
         else:
             return JsonResponse({'success': False, 'error': 'Invalid role'}, status=400)
