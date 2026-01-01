@@ -11,7 +11,7 @@ from django.core.mail import send_mail
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from django.utils import timezone
 from .utils import get_client_ip, is_holiday
-from datetime import date, datetime,timedelta
+from datetime import date, datetime,timedelta,time
 from django.conf import settings
 import os
 from rest_framework import status 
@@ -217,6 +217,15 @@ def auto_mark_absent(request, secret_key):
     # Skip holiday & weekend
     if is_holiday(today) or today.weekday() >= 5:
         return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
+
+     # Define the time window: 10:00 AM to 11:00 AM
+    start_time = time(10, 0)
+    end_time = time(11, 0)
+    now_time = datetime.now().time()
+
+    # Check if current time is within the window
+    if not (start_time <= now_time <= end_time):
+        return JsonResponse({'status': f'Not in auto-absent window. Current time: {now_time}'})
 
     users = Adduser.objects.all()
     updated_count = 0

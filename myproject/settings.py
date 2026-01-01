@@ -169,8 +169,8 @@ USE_TZ = True
 from datetime import time
 
 # settings.py
-ATTENDANCE_START_TIME = time(9, 0)   # 9:00 AM
-ATTENDANCE_END_TIME = time(11, 30)    # 10:30 AM
+ATTENDANCE_START_TIME = time(10, 00)   # 9:00 AM
+ATTENDANCE_END_TIME = time(11, 00)    # 10:30 AM
 
 # Secret key for auto-mark endpoint
 AUTO_MARK_SECRET = "attend-2025-9f8a2cX!@"  # store in environment variable in production
