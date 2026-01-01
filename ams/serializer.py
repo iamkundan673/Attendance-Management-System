@@ -15,3 +15,15 @@ class AdduserSerializer(serializers.ModelSerializer):
             'employee_id',
         ]
         read_only_fields = ['id', 'username', 'employee_id']
+
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        #  Add role info
+        token["is_staff"] = user.is_staff
+        token["user_id"] = user.id
+        return token

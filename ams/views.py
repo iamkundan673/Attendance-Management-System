@@ -22,6 +22,12 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Count, Q
 from cloudinary.uploader import destroy
 from django.shortcuts import get_object_or_404
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializer import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 #--------------------------
 # user login 
 #--------------------------
