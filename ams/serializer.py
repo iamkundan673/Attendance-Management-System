@@ -17,7 +17,6 @@ class AdduserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'employee_id']
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
