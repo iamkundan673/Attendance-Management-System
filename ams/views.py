@@ -724,7 +724,7 @@ def user_leaves_api(request):
             return Response({"success": False, "error": "Invalid user_id"}, status=status.HTTP_400_BAD_REQUEST)
 
     if not leaves.exists():
-        return Response({"success": False, "error": "No leave requests found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=204)
 
     data = []
     for leave in leaves:
