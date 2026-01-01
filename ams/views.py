@@ -227,7 +227,7 @@ def auto_mark_absent(request, secret_key):
     if not (start_time <= now_time <= end_time):
         return JsonResponse({'status': f'Not in auto-absent window. Current time: {now_time}'})
 
-    users = Adduser.objects.all()
+    users = Adduser.objects.filter(is_active=True)
     updated_count = 0
 
     for user in users:
