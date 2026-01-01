@@ -213,48 +213,50 @@ def auto_mark_absent(request, secret_key):
         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
     today = date.today()
-
-    # Skip holiday & weekend
+    now_time = datetime.now().time()
+    # Skip holidays & weekends
     if is_holiday(today) or today.weekday() >= 5:
         return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
 
-     # Define the time window: 10:00 AM to 11:00 AM
-    start_time = time(10, 0)
-    end_time = time(11, 0)
-    now_time = datetime.now().time()
+    # Define attendance timings
+    start_attendance_time = time(10, 0)  # 10:00 AM
+    end_attendance_time = time(11, 0)    # 11:00 AM
 
-    # Check if current time is within the window
-    if not (start_time <= now_time <= end_time):
-        return JsonResponse({'status': f'Not in auto-absent window. Current time: {now_time}'})
+    # Case 1: Before 10:00 AM → no attendance allowed
+    if now_time < start_attendance_time:
+        return JsonResponse({'status': 'Attendance not open yet. Please come after 10:00 AM.'})
 
-    users = Adduser.objects.filter(is_active=True)
-    updated_count = 0
+    # Case 2: Between 10:00 AM and 11:00 AM → attendance open
+    if start_attendance_time <= now_time < end_attendance_time:
+        return JsonResponse({'status': 'Attendance window open. Users can mark attendance now.'})
 
-    for user in users:
-        #  Do NOT create attendance here
-        attendance = Attendance.objects.filter(user=user, date=today).first()
+    # Case 3: After 11:00 AM → auto-mark absent
+    if now_time >= end_attendance_time:
+        users = Adduser.objects.filter(is_active=True)
+        updated_count = 0
 
-        # If attendance exists and already present → skip
-        if attendance and attendance.attendance_status == Attendance.ATT_PRESENT:
-            continue
+        for user in users:
+            attendance = Attendance.objects.filter(user=user, date=today).first()
 
-        # If no attendance exists → create ABSENT record
-        if not attendance:
-            Attendance.objects.create(
-                user=user,
-                date=today,
-                attendance_status=Attendance.ATT_ABSENT,
-                status="Absent",
-                # check_in_time=None,
-                ip_address=None
-            )
-            updated_count += 1
+            # Skip if already marked present
+            if attendance and attendance.attendance_status == Attendance.ATT_PRESENT:
+                continue
 
-    return JsonResponse({
-        'status': 'Auto-mark absent completed',
-        'users_marked_absent': updated_count
-    })
+            # Create absent record if not exists
+            if not attendance:
+                Attendance.objects.create(
+                    user=user,
+                    date=today,
+                    attendance_status=Attendance.ATT_ABSENT,
+                    status="Absent",
+                    ip_address=None
+                )
+                updated_count += 1
 
+        return JsonResponse({
+            'status': 'Auto-mark absent completed',
+            'users_marked_absent': updated_count
+        })
 
 # user attendence history
 @api_view(['GET'])
