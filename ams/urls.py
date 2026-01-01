@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path,include
 from . import views
+from .views import CustomTokenObtainPairView
 from django.http import HttpResponse
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -29,7 +30,7 @@ def home(request):
 
 urlpatterns = [
     path('',home,name='home'),
-    path('token/', views.CustomTokenObtainPairView, name='token_obtain'),
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('login/',views.user_login_api,name="user_login_api"),
     path('dashboard/', views.dashboard_api, name='user-dashboard'),
