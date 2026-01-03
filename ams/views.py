@@ -28,6 +28,20 @@ from .serializer import CustomTokenObtainPairSerializer
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+
+#logout api
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_api(request):
+    try:
+        refresh_token = request.data.get("refresh")
+        token = RefreshToken(refresh_token)
+        token.blacklist()   # kill refresh token
+
+        return Response({"success": True, "message": "Logged out successfully"})
+    except Exception:
+        return Response({"success": False, "message": "Invalid token"}, status=400)
 #--------------------------
 # user login 
 #--------------------------
@@ -72,6 +86,7 @@ def user_login_api(request):
           
         }
     })
+
 #-----------------------------------------------------------
 # Reseting the password of the user by admin
 #-----------------------------------------------------------
@@ -312,7 +327,6 @@ def attendance_by_user(request, user_id):
         },
         'records': data
     })
-
 # user attendence history for admin, for listing all
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -641,9 +655,11 @@ def submit_leave_api(request):
             'success': False,
             'message': f'Upload failed: {str(e)}'
         }, status=500)
+
 #-----------------------------------------------------------
 # listing all the user leaves applications 
 # user leave ,List leave requests,specific one user by filtering id 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_leaves_api(request):
@@ -652,8 +668,7 @@ def list_all_leaves_api(request):
     # Only admin/staff can access
     if not user.is_staff:
         return Response(
-            {"success": False, "error": "Permission denied"},
-            status=403
+            {"success": False, "error": "Permission denied"},status=403
         )
 
     leaves = LeaveRequest.objects.select_related('employee').order_by('-id')
