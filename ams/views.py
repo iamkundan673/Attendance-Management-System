@@ -230,7 +230,7 @@ def auto_mark_absent(request, secret_key):
     today = date.today()
     now_time = datetime.now().time()
     # Skip holidays & weekends
-    if is_holiday(today) or today.weekday() >= 5:
+    if is_holiday(today) or today.weekday() >= 7:
         return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
 
     # Define attendance timings
