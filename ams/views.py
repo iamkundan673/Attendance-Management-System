@@ -45,47 +45,75 @@ def logout_api(request):
 #--------------------------
 # user login 
 #--------------------------
+# @csrf_exempt
+# @api_view(['POST'])
+# @authentication_classes([])  # disables authentication
+# @permission_classes([AllowAny])  # allows any user to call this view
+# def user_login_api(request):
+#     username = request.data.get('username', '').strip()
+#     password = request.data.get('password', '').strip()
+
+#     if not username or not password:
+#         return Response({'success': False, 'message': 'Username and password are required'}, status=400)
+
+#     user = authenticate(username=username, password=password)
+
+#     if user is None:
+#         return Response(
+#             {'success': False, 'message': 'Invalid username or password'},
+#             status=401
+#         )
+
+#     if not user.is_active:
+#         return Response(
+#             {'success': False, 'message': 'Account is inactive'},
+#             status=403
+#         )
+
+#     # Generate JWT tokens
+#     refresh = RefreshToken.for_user(user)
+#     access_token = str(refresh.access_token)
+
+#     return Response({
+#         'success': True,
+#         'token': access_token,
+#         'is_staff':user.is_staff,
+#         'user': {
+#             'id': user.id,
+#             'username': user.username,
+#             'email': user.email,
+            
+          
+#         }
+#     })
+from .serializer import UserLoginSerializer
+
 @csrf_exempt
 @api_view(['POST'])
-@authentication_classes([])  # disables authentication
-@permission_classes([AllowAny])  # allows any user to call this view
+@authentication_classes([])
+@permission_classes([AllowAny])
 def user_login_api(request):
-    username = request.data.get('username', '').strip()
-    password = request.data.get('password', '').strip()
 
-    if not username or not password:
-        return Response({'success': False, 'message': 'Username and password are required'}, status=400)
+    serializer = UserLoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-    user = authenticate(username=username, password=password)
+    user = serializer.validated_data["user"]
 
-    if user is None:
-        return Response(
-            {'success': False, 'message': 'Invalid username or password'},
-            status=401
-        )
-
-    if not user.is_active:
-        return Response(
-            {'success': False, 'message': 'Account is inactive'},
-            status=403
-        )
-
-    # Generate JWT tokens
+    # SAME TOKEN LOGIC
     refresh = RefreshToken.for_user(user)
     access_token = str(refresh.access_token)
 
     return Response({
         'success': True,
         'token': access_token,
-        'is_staff':user.is_staff,
+        'is_staff': user.is_staff,
         'user': {
             'id': user.id,
             'username': user.username,
             'email': user.email,
-            
-          
         }
     })
+
 
 #-----------------------------------------------------------
 # Reseting the password of the user by admin
@@ -564,27 +592,34 @@ def user_list_api(request):
 
 
 
-# deleting the user 
-# @csrf_exempt
-# def user_delete_api(request, user_id):
-#     if request.method != 'DELETE':
-#         return JsonResponse({'success': False, 'error': 'DELETE request required'}, status=400)
+# deleting the user
+@csrf_exempt
+def user_delete(request, user_id):
+    if request.method != 'DELETE':
+        return JsonResponse({'success': False, 'error': 'DELETE request required'}, status=400)
 
-#     try:
-#         user = Adduser.objects.get(id=user_id)
-#     except Adduser.DoesNotExist:
-#         return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    try:
+        user = Adduser.objects.get(id=user_id)
+    except Adduser.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    
+      # Allow delete ONLY if user is disabled
+    if not user.is_disabled:
+        return JsonResponse(
+            {
+                'success': False,
+                'error': 'Active users must be disabled before deletion'
+            },
+            status=400
+        )
 
-#     user.is_disabled=True
-#     user.save()
+    user.delete()
 
-#     return JsonResponse({'success': True, 'message': 'User deleted successfully'})
-
-
+    return JsonResponse({'success': True, 'message': 'User deleted successfully'})
 
 # only disable the user 
 @csrf_exempt
-def user_delete_api(request, user_id):
+def user_disable_api(request, user_id):
     if request.method != 'POST':  # POST for disabling
         return JsonResponse({'success': False, 'error': 'POST request required'}, status=400)
 
