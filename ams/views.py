@@ -596,26 +596,25 @@ def user_list_api(request):
 @csrf_exempt
 def user_delete(request, user_id):
     if request.method != 'DELETE':
-        return JsonResponse({'success': False, 'error': 'DELETE request required'}, status=400)
-
-    try:
-        user = Adduser.objects.get(id=user_id)
-    except Adduser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
-    
-      # Allow delete ONLY if user is disabled
-    if not user.is_disabled:
         return JsonResponse(
-            {
-                'success': False,
-                'error': 'Active users must be disabled before deletion'
-            },
+            {'success': False, 'error': 'DELETE request required'},
             status=400
         )
 
-    user.delete()
+    try:
+        user = Adduser.objects.get(id=user_id)
+        user.delete()
+        return JsonResponse(
+            {'success': True, 'message': 'User deleted successfully'},
+            status=200
+        )
 
-    return JsonResponse({'success': True, 'message': 'User deleted successfully'})
+    except Adduser.DoesNotExist:
+        return JsonResponse(
+            {'success': False, 'error': 'User not found'},
+            status=404
+        )
+
 
 # only disable the user 
 @csrf_exempt
