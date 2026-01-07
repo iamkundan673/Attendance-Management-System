@@ -1074,10 +1074,6 @@ def holiday_create_api(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def holiday_list_api(request):
-    user = request.user
-    if not user.is_staff:
-        return Response({"success": False, "error": "Permission denied"}, status=403)
-
     holidays = Holiday.objects.all().order_by('-start_date')
 
     data = []
@@ -1103,7 +1099,7 @@ def holiday_delete_api(request):
         return Response({"success": False, "error": "Permission denied"}, status=403)
 
     holiday_id = request.data.get("holiday_id")
-    date_str = request.data.get("date")
+    date_str = request.data.get("date")  # you can also allow list of dates if needed
 
     if not holiday_id or not date_str:
         return Response({"success": False, "error": "holiday_id and date are required"}, status=400)
@@ -1116,51 +1112,58 @@ def holiday_delete_api(request):
 
     start = holiday.start_date
     end = holiday.end_date or holiday.start_date
-
-    changes=[]
+    changes = []
 
     if delete_date < start or delete_date > end:
         return Response({"success": False, "error": "Date not in holiday range"}, status=400)
-        changes.append("Holiday date removed")
+
+    deleted_dates = []  # Collect all affected dates
 
     # CASE 1: single-day holiday
     if start == end == delete_date:
+        deleted_dates.append(delete_date)
         holiday.delete()
         changes.append("Holiday deleted")
-
     # CASE 2: deleting start date
     elif delete_date == start:
+        deleted_dates.append(start)
         holiday.start_date = start + timedelta(days=1)
         holiday.save()
         changes.append("Holiday start date updated")
-
     # CASE 3: deleting end date
     elif delete_date == end:
+        deleted_dates.append(end)
         holiday.end_date = end - timedelta(days=1)
         holiday.save()
         changes.append("Holiday end date updated")
     # CASE 4: deleting middle date → split
     else:
+        # All dates before delete_date
         Holiday.objects.create(
             start_date=start,
             end_date=delete_date - timedelta(days=1),
             description=holiday.description
         )
+        # Update current holiday to start after deleted date
         holiday.start_date = delete_date + timedelta(days=1)
         holiday.save()
+        deleted_dates.append(delete_date)
+        changes.append("Holiday split into two ranges")
+
     # ------------------------------------------------------
-    # Notify all active non-admin users
+    # Notify all active non-admin users ONE TIME
     # ------------------------------------------------------
-    if changes:
+    if deleted_dates:
         User = get_user_model()
         users = User.objects.filter(is_active=True, is_staff=False)  # only normal users
-        date_text = f"{delete_date}"  # date that was affected
+        # Convert deleted_dates to readable string
+        deleted_dates_text = ", ".join([d.strftime("%Y-%m-%d") for d in deleted_dates])
 
         for u in users:
             notify(
                 user=u,
                 title="Holiday Updated",
-                message=f"{holiday.description} ({date_text}): " + ", ".join(changes),
+                message=f"{holiday.description} has been removed/updated for the following date(s): {deleted_dates_text}.",
                 type="holiday"
             )
 
