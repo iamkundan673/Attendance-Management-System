@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.contrib.auth.hashers import check_password,make_password
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Adduser,Attendance,LeaveRequest,Holiday
+from .models import Adduser,Attendance,LeaveRequest,Holiday,Notification
 import json
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -15,7 +15,7 @@ from datetime import date, datetime,timedelta,time
 from django.conf import settings
 import os
 from rest_framework import status 
-from .serializer import AdduserSerializer
+from .serializer import AdduserSerializer,NotificationSerializer
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -42,6 +42,30 @@ def logout_api(request):
         return Response({"success": True, "message": "Logged out successfully"})
     except Exception:
         return Response({"success": False, "message": "Invalid token"}, status=400)
+    
+#notification view
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_notifications(request):
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
+
+    serializer = NotificationSerializer(notifications, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_as_read(request, id):
+    notification = Notification.objects.get(id=id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return Response({"success": True})
+
+
+
+
 #--------------------------
 # user login 
 #--------------------------
@@ -118,6 +142,7 @@ def user_login_api(request):
 #-----------------------------------------------------------
 # Reseting the password of the user by admin
 #-----------------------------------------------------------
+from ams.services import notify
 @csrf_exempt
 def admin_reset_password(request, user_id):
     if request.method != 'PUT':
@@ -147,6 +172,14 @@ def admin_reset_password(request, user_id):
     # Update password
     user.set_password(password)
     user.save()
+
+    notify(
+        user=user,
+        title="Password Changed",
+        message="Your account password was reset by the admin. Please login and change it if needed.",
+        notification_type="SECURITY"
+    )
+
 
     # Send new password via email
     subject = "Your Account Password Has Been Updated"
@@ -544,23 +577,38 @@ def edit_user_api(request, user_id):
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+    
+    changes = []  # 🔹 track what changed
+
 
     if 'is_active' in data:
         user.is_active = data['is_active']
+        changes.append("Account status updated")
 
     if 'email' in data:
         user.email = data['email']
+        changes.append("Email updated")
 
     if 'contact_number' in data:
         user.contact_number = data['contact_number']
+        changes.append("Contact number updated")
 
     if 'role' in data:
         if data['role'] in dict(Adduser.ROLE_CHOICES): 
             user.role = data['role']
+            changes.append("Role updated")
         else:
             return JsonResponse({'success': False, 'error': 'Invalid role'}, status=400)
 
     user.save()
+       #  SEND NOTIFICATION TO USER
+    if changes:
+        notify(
+            user=user,
+            title="Account Updated",
+            message="Your account details were updated by admin: " + ", ".join(changes),
+            notification_type="ACCOUNT"
+        )
 
     return JsonResponse({
         'success': True,
@@ -611,11 +659,9 @@ def user_delete(request, user_id):
 
     except Adduser.DoesNotExist:
         return JsonResponse(
-            {'success': False, 'error': 'User not found'},
+            {'success': False, 'error': 'User not found'},  
             status=404
         )
-
-
 # only disable the user 
 @csrf_exempt
 def user_disable_api(request, user_id):
@@ -662,6 +708,18 @@ def submit_leave_api(request):
             leave_type=leave_type,
             document=document  # CloudinaryField handles this
         )
+        #get notify by admin
+        User = get_user_model()
+        admins = User.objects.filter(is_staff=True, is_active=True)
+
+        for admin in admins:
+            notify(
+                user=admin,
+                title="New Leave Request",
+                message=f"{user.Full_Name} submitted a {leave_type} leave "
+                    f"from {start_date} to {end_date}.",
+                notification_type="LEAVE"
+            )
         
         # Get URL after save
         doc_url = leave.document.url if leave.document else None
@@ -838,6 +896,13 @@ def leave_action_api(request, leave_id):
             f"Regards,\nHR Team"
         )
 
+        #  USER NOTIFICATION
+        notify(
+            user=leave.employee,
+            title="Leave Approved",
+            message=f"Your {leave.leave_type} leave has been approved.",
+            notification_type="LEAVE"
+        )
     # =========================
     # REJECT
     else:
@@ -852,6 +917,14 @@ def leave_action_api(request, leave_id):
             f"If you have questions, please contact HR.\n\n"
             f"Regards,\nHR Team"
         )
+         # USER NOTIFICATION
+        notify(
+            user=leave.employee,
+            title="Leave Rejected",
+            message=f"Your {leave.leave_type} leave was rejected. Reason: {reject_reason}",
+            notification_type="LEAVE"
+        )
+
 
     # Update leave status
     leave.save()
@@ -922,8 +995,9 @@ def my_attendance_summary_api(request):
         "total_days": present_days + absent_days
     })
 
-#-----------------------------------------------------------#
+#-----------------------------------------------------------
 # inserting holidays by admin
+#-----------------------------------------------------------
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -950,6 +1024,22 @@ def holiday_create_api(request):
         return Response({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}, status=400)
 
     holiday = Holiday.objects.create(start_date=start_date, end_date=end_date, description=description)
+    
+     # Notify all active users
+    User = get_user_model()
+    users = User.objects.filter(is_active=True)
+
+    date_text = (
+        f"{start_date} to {end_date}" if end_date else f"{start_date}"
+    )
+
+    for u in users:
+        notify(
+            user=u,
+            title="New Holiday",
+            message=f"{description} ({date_text})",
+            notification_type="HOLIDAY"
+        )
 
     return Response({
         "success": True,

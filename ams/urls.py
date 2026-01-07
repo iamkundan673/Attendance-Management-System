@@ -58,6 +58,9 @@ urlpatterns = [
     path('delholiday/date/',views.holiday_delete_api,name='holiday_delete_api'),
     path('viewprofile/<int:user_id>/',views.get_profile_picture_api,name='get_profile_picture_api'),
 
+    path('notifications/', views.my_notifications, name='my_notifications'),
+    path('notify/<int:id>/read/', views.mark_as_read, name='mark_as_read'),
+
     # path('ip/', views.ipcheck, name='edi'), 
     # path('ams/', include('ams.urls')),
 
