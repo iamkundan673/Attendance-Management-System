@@ -55,15 +55,36 @@ def my_notifications(request):
     return Response(serializer.data)
 
 
-@api_view(['POST'])
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def mark_as_read(request, id):
+#     notification = Notification.objects.get(id=id, user=request.user)
+#     notification.is_read = True
+#     notification.save()
+#     return Response({"success": True})
+
+@api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def mark_as_read(request, id):
-    notification = Notification.objects.get(id=id, user=request.user)
+    notification = get_object_or_404(
+        Notification,
+        id=id,
+        user=request.user
+    )
+
+    if notification.is_read:
+        return Response({
+            "success": True,
+            "message": "Notification already marked as read"
+        })
+
     notification.is_read = True
     notification.save()
-    return Response({"success": True})
 
-
+    return Response({
+        "success": True,
+        "message": "Notification marked as read"
+    })
 
 
 #--------------------------
