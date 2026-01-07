@@ -1046,7 +1046,7 @@ def holiday_create_api(request):
     
      # Notify all active users
     User = get_user_model()
-    users = User.objects.filter(is_active=True)
+    users = User.objects.filter(is_active=True,is_staff=False)
 
     date_text = (
         f"{start_date} to {end_date}" if end_date else f"{start_date}"
