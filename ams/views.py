@@ -739,7 +739,7 @@ def submit_leave_api(request):
                 title="New Leave Request",
                 message=f"{user.Full_Name} submitted a {leave_type} leave "
                     f"from {start_date} to {end_date}.",
-                notification_type="LEAVE"
+                type="leave"
             )
         
         # Get URL after save
@@ -772,7 +772,6 @@ def submit_leave_api(request):
 #-----------------------------------------------------------
 # listing all the user leaves applications 
 # user leave ,List leave requests,specific one user by filtering id 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_all_leaves_api(request):
@@ -817,7 +816,6 @@ def list_all_leaves_api(request):
             "document_filename": filename,
             "submitted_at": leave.created_at.strftime("%Y-%m-%d %H:%M:%S") if leave.created_at else None
         })
-
     return Response({
         "success": True,
         "applications": data
