@@ -1072,7 +1072,7 @@ def holiday_create_api(request):
 #-----------------------------------------------------------#
 # Getting all the holidays
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def holiday_list_api(request):
     user = request.user
     if not user.is_staff:
@@ -1117,23 +1117,28 @@ def holiday_delete_api(request):
     start = holiday.start_date
     end = holiday.end_date or holiday.start_date
 
+    changes=[]
+
     if delete_date < start or delete_date > end:
         return Response({"success": False, "error": "Date not in holiday range"}, status=400)
+        changes.append("Holiday date removed")
 
     # CASE 1: single-day holiday
     if start == end == delete_date:
         holiday.delete()
+        changes.append("Holiday deleted")
 
     # CASE 2: deleting start date
     elif delete_date == start:
         holiday.start_date = start + timedelta(days=1)
         holiday.save()
+        changes.append("Holiday start date updated")
 
     # CASE 3: deleting end date
     elif delete_date == end:
         holiday.end_date = end - timedelta(days=1)
         holiday.save()
-
+        changes.append("Holiday end date updated")
     # CASE 4: deleting middle date → split
     else:
         Holiday.objects.create(
@@ -1143,5 +1148,20 @@ def holiday_delete_api(request):
         )
         holiday.start_date = delete_date + timedelta(days=1)
         holiday.save()
+    # ------------------------------------------------------
+    # Notify all active non-admin users
+    # ------------------------------------------------------
+    if changes:
+        User = get_user_model()
+        users = User.objects.filter(is_active=True, is_staff=False)  # only normal users
+        date_text = f"{delete_date}"  # date that was affected
+
+        for u in users:
+            notify(
+                user=u,
+                title="Holiday Updated",
+                message=f"{holiday.description} ({date_text}): " + ", ".join(changes),
+                type="holiday"
+            )
 
     return Response({"success": True, "message": "Holiday date removed successfully"})
