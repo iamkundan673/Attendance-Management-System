@@ -198,7 +198,7 @@ def admin_reset_password(request, user_id):
         user=user,
         title="Password Changed",
         message="Your account password was reset by the admin. Please login and change it if needed.",
-        notification_type="SECURITY"
+        type="security"
     )
 
 
@@ -628,7 +628,7 @@ def edit_user_api(request, user_id):
             user=user,
             title="Account Updated",
             message="Your account details were updated by admin: " + ", ".join(changes),
-            notification_type="ACCOUNT"
+            type="account"
         )
 
     return JsonResponse({
@@ -920,7 +920,7 @@ def leave_action_api(request, leave_id):
             user=leave.employee,
             title="Leave Approved",
             message=f"Your {leave.leave_type} leave has been approved.",
-            notification_type="LEAVE"
+            type="leave"
         )
     # =========================
     # REJECT
@@ -941,7 +941,7 @@ def leave_action_api(request, leave_id):
             user=leave.employee,
             title="Leave Rejected",
             message=f"Your {leave.leave_type} leave was rejected. Reason: {reject_reason}",
-            notification_type="LEAVE"
+            type="leave"
         )
 
 
@@ -1057,7 +1057,7 @@ def holiday_create_api(request):
             user=u,
             title="New Holiday",
             message=f"{description} ({date_text})",
-            notification_type="HOLIDAY"
+            type="holiday"
         )
 
     return Response({
