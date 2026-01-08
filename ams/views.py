@@ -652,23 +652,45 @@ def edit_user_api(request, user_id):
     })
 
 # all user list 
+# @csrf_exempt
+# @api_view(["GET"])
+# # @permission_classes([IsAuthenticated])
+# def user_list_api(request):
+#     # Get all users and their status
+#     # users = Adduser.objects.all().values('id', 'role', 'username', 'email', 'is_active','contact_number','address','employee_id')
+#     users = Adduser.objects.all()
+#     serializer = AdduserSerializer(users, many=True)
+#     active_users = [u for u in users if u['is_active']]
+#     disabled_users = [u for u in users if not u['is_active']]
+
+#     return Response({
+#         'success': True,
+#         'active_users': active_users,
+#         'disabled_users': disabled_users
+#     }, status=status.HTTP_200_OK)
+
 @csrf_exempt
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
 def user_list_api(request):
-    # Get all users and their status
-    # users = Adduser.objects.all().values('id', 'role', 'username', 'email', 'is_active','contact_number','address','employee_id')
     users = Adduser.objects.all()
     serializer = AdduserSerializer(users, many=True)
-    active_users = [u for u in users if u['is_active']]
-    disabled_users = [u for u in users if not u['is_active']]
+
+    active_users = []
+    disabled_users = []
+
+    for u in serializer.data:
+        # use get() to avoid KeyError
+        is_active = u.get('is_active', False)
+        if is_active:
+            active_users.append(u)
+        else:
+            disabled_users.append(u)
 
     return Response({
         'success': True,
         'active_users': active_users,
         'disabled_users': disabled_users
-    }, status=status.HTTP_200_OK)
-
+    })
 
 
 # deleting the user
