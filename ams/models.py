@@ -24,15 +24,15 @@ class Adduser(AbstractUser):
         blank=True
     )
     
-    ROLE_CHOICES=[
-        ('It','It'),
-        ('Backend Developer','Backend Developer'),
-        ('Frontend Developer','Frontend Developer'),
-        ('Fullstack Developer','Fullstack Developer'),
-        ('UI/UX Designer','UI/UX Designerr'),
-        ('Digital Marketing','Digital Marketing'),
-    ]
-    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='Frontend')
+    # ROLE_CHOICES=[
+    #     ('It','It'),
+    #     ('Backend Developer','Backend Developer'),
+    #     ('Frontend Developer','Frontend Developer'),
+    #     ('Fullstack Developer','Fullstack Developer'),
+    #     ('UI/UX Designer','UI/UX Designerr'),
+    #     ('Digital Marketing','Digital Marketing'),
+    # ]
+    role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True,blank=True)
     def __str__(self):
         return self.username
 
