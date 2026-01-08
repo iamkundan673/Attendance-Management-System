@@ -452,7 +452,7 @@ def create_user_api(request):
 
     Full_Name = data.get("fullname") or data.get("Full_Name")
     email = data.get("email")
-    role_name = data.get("role", "").strip()
+    role = data.get("role", "")
     contact_number = data.get("contact_number", "")
     address = data.get("address", "")
     employee_id = data.get("employee_id", "")
@@ -493,18 +493,19 @@ def create_user_api(request):
     )
     user.Full_Name = Full_Name
     user.contact_number=contact_number
+    user.rele=role
     user.address=address
     user.employee_id=employee_id
     user.is_staff = False
     user.is_superuser = False
     user.is_active = True
      # ----- HANDLE ROLE -----
-    if role_name:
-        # Get existing role or create new one
-        role_obj, created = Role.objects.get_or_create(name=role_name)
-        user.role = role_obj
-    else:
-        user.role = None  # Optional: assign default role if needed
+    # if role_name:
+    #     # Get existing role or create new one
+    #     role_obj, created = Role.objects.get_or_create(name=role_name)
+    #     user.role = role_obj
+    # else:
+    #     user.role = None  # Optional: assign default role if needed
 
 
     user.save()
