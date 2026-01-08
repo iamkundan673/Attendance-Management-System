@@ -680,6 +680,7 @@ def user_list_api(request):
 
     for u in serializer.data:
         # use get() to avoid KeyError
+        
         is_active = u.get('is_active', False)
         if is_active:
             active_users.append(u)
