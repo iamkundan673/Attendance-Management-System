@@ -42,6 +42,7 @@ class AdduserSerializer(serializers.ModelSerializer):
             # 'role_input',  # Write-only, used to create/update role dynamically
             'contact_number',
             'address',
+            'is_active',
             'employee_id',
         ]
         read_only_fields = ['id', 'username', 'employee_id','role']
