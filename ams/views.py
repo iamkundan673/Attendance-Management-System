@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.contrib.auth.hashers import check_password,make_password
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Adduser,Attendance,LeaveRequest,Holiday,Notification
+from .models import Adduser,Attendance,LeaveRequest,Holiday,Notification,Role
 import json
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -452,7 +452,7 @@ def create_user_api(request):
 
     Full_Name = data.get("fullname") or data.get("Full_Name")
     email = data.get("email")
-    role = data.get("role", "")
+    role_name = data.get("role", "").strip()
     contact_number = data.get("contact_number", "")
     address = data.get("address", "")
     employee_id = data.get("employee_id", "")
@@ -492,13 +492,21 @@ def create_user_api(request):
         password=temp_password,
     )
     user.Full_Name = Full_Name
-    user.role = role
     user.contact_number=contact_number
     user.address=address
     user.employee_id=employee_id
     user.is_staff = False
     user.is_superuser = False
     user.is_active = True
+     # ----- HANDLE ROLE -----
+    if role_name:
+        # Get existing role or create new one
+        role_obj, created = Role.objects.get_or_create(name=role_name)
+        user.role = role_obj
+    else:
+        user.role = None  # Optional: assign default role if needed
+
+
     user.save()
 
     # Send email
@@ -1168,3 +1176,5 @@ def holiday_delete_api(request):
             )
 
     return Response({"success": True, "message": "Holiday date removed successfully"})
+
+

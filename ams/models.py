@@ -23,8 +23,7 @@ class Adduser(AbstractUser):
         null=True,
         blank=True
     )
-
-
+    
     ROLE_CHOICES=[
         ('It','It'),
         ('Backend Developer','Backend Developer'),
@@ -36,7 +35,13 @@ class Adduser(AbstractUser):
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='Frontend')
     def __str__(self):
         return self.username
-    
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name   
     
 # ams/models.py
 from django.db import models
