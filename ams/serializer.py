@@ -39,7 +39,7 @@ class AdduserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'role',        # Read-only, shows the current role name
-            # 'role_input',  # Write-only, used to create/update role dynamically
+            'role_input',  # Write-only, used to create/update role dynamically
             'contact_number',
             'address',
             'is_active',
