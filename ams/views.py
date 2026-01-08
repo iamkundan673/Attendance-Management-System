@@ -657,7 +657,9 @@ def edit_user_api(request, user_id):
 # @permission_classes([IsAuthenticated])
 def user_list_api(request):
     # Get all users and their status
-    users = Adduser.objects.all().values('id', 'role', 'username', 'email', 'is_active','contact_number','address','employee_id')
+    # users = Adduser.objects.all().values('id', 'role', 'username', 'email', 'is_active','contact_number','address','employee_id')
+    users = Adduser.objects.all()
+    serializer = AdduserSerializer(users, many=True)
     active_users = [u for u in users if u['is_active']]
     disabled_users = [u for u in users if not u['is_active']]
 
