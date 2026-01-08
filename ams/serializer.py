@@ -39,12 +39,12 @@ class AdduserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'role',        # Read-only, shows the current role name
-            'role_input',  # Write-only, used to create/update role dynamically
+            # 'role_input',  # Write-only, used to create/update role dynamically
             'contact_number',
             'address',
             'employee_id',
         ]
-        read_only_fields = ['id', 'username', 'employee_id']
+        read_only_fields = ['id', 'username', 'employee_id','role']
 
     def create(self, validated_data):
         role_name = validated_data.pop('role_input', None)
