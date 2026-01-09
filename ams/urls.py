@@ -60,6 +60,9 @@ urlpatterns = [
 
     path('notifications/', views.my_notifications, name='my_notifications'),
     path('notify/<int:id>/read/', views.mark_as_read, name='mark_as_read'),
+    path('role/', views.create_role_api, name='create_role_api'),
+    path('listrole/', views.get_roles_api, name='get_roles_api'),
+    path('editrole/<int:role_id>/', views.edit_role_api, name='edit_role_api'),
 
     # path('ip/', views.ipcheck, name='edi'), 
     # path('ams/', include('ams.urls')),
