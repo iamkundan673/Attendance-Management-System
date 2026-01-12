@@ -17,7 +17,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 #         ]
 #         read_only_fields = ['id', 'username', 'employee_id']
 
-
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
@@ -30,7 +29,6 @@ class AdduserSerializer(serializers.ModelSerializer):
     
     # Optional: allow inputting a new role by name
     role_input = serializers.CharField(write_only=True, required=False, allow_blank=True)
-
     class Meta:
         model = Adduser
         fields = [

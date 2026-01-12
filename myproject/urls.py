@@ -23,6 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ams/',include('ams.urls')),
     path('acc/',include('account.urls')),
+    path('leave/',include('leave.urls')),
+    path('ip/',include('ip.urls')),
 
 ]
 

@@ -2,7 +2,9 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Adduser,Attendance,LeaveRequest
+from .models import Adduser,Attendance
+from leave.models import LeaveRequest
+from ip.models import OfficeIP
 
 @admin.register(Adduser)
 class AdduserAdmin(admin.ModelAdmin):
@@ -12,3 +14,4 @@ class AdduserAdmin(admin.ModelAdmin):
 
 admin.site.register(Attendance)
 admin.site.register(LeaveRequest)
+admin.site.register(OfficeIP)
