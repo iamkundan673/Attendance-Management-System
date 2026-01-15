@@ -1,58 +1,58 @@
 # Create your views here.
-from rest_framework.decorators import api_view,permission_classes,authentication_classes,parser_classes
-from rest_framework.response import Response
-from django.contrib.auth.hashers import check_password,make_password
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Adduser,Attendance,Holiday,Notification,Role
-import json
-from django.http import JsonResponse
-from django.core.mail import send_mail
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
-from django.utils import timezone
-from .utils import get_client_ip, is_holiday
-from datetime import date, datetime,timedelta,time
-from django.conf import settings
-import os
-from rest_framework import status 
-from .serializer import AdduserSerializer,NotificationSerializer
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.db.models import Count, Q
-from cloudinary.uploader import destroy
-from django.shortcuts import get_object_or_404
+# from rest_framework.decorators import api_view,permission_classes,authentication_classes,parser_classes
+# from rest_framework.response import Response
+# from django.contrib.auth.hashers import check_password,make_password
+# from django.views.decorators.csrf import csrf_exempt
+# from rest_framework_simplejwt.tokens import RefreshToken
+# from ams.models.User import Adduser,Attendance,Holiday,Notification,Role
+# import json
+# from django.http import JsonResponse
+# from django.core.mail import send_mail
+# from rest_framework.permissions import IsAuthenticated,IsAdminUser
+# from django.utils import timezone
+# from .utils import get_client_ip, is_holiday
+# from datetime import date, datetime,timedelta,time
+# from django.conf import settings
+# import os
+# from rest_framework import status 
+# from .serializer import AdduserSerializer,NotificationSerializer
+# from rest_framework.permissions import AllowAny
+# from django.contrib.auth import authenticate
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from django.db.models import Count, Q
+# from cloudinary.uploader import destroy
+# from django.shortcuts import get_object_or_404
 
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializer import CustomTokenObtainPairSerializer
+# from rest_framework_simplejwt.views import TokenObtainPairView
+# from .serializer import CustomTokenObtainPairSerializer
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+# class CustomTokenObtainPairView(TokenObtainPairView):
+#     serializer_class = CustomTokenObtainPairSerializer
 
 
-#logout api
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def logout_api(request):
-    try:
-        refresh_token = request.data.get("refresh")
-        token = RefreshToken(refresh_token)
-        token.blacklist()   # kill refresh token
+# #logout api
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def logout_api(request):
+#     try:
+#         refresh_token = request.data.get("refresh")
+#         token = RefreshToken(refresh_token)
+#         token.blacklist()   # kill refresh token
 
-        return Response({"success": True, "message": "Logged out successfully"})
-    except Exception:
-        return Response({"success": False, "message": "Invalid token"}, status=400)
+#         return Response({"success": True, "message": "Logged out successfully"})
+#     except Exception:
+#         return Response({"success": False, "message": "Invalid token"}, status=400)
     
-#notification view
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def my_notifications(request):
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
+# #notification view
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def my_notifications(request):
+#     notifications = Notification.objects.filter(
+#         user=request.user
+#     ).order_by('-created_at')
 
-    serializer = NotificationSerializer(notifications, many=True)
-    return Response(serializer.data)
+#     serializer = NotificationSerializer(notifications, many=True)
+#     return Response(serializer.data)
 
 
 # @api_view(['POST'])
@@ -63,28 +63,28 @@ def my_notifications(request):
 #     notification.save()
 #     return Response({"success": True})
 
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def mark_as_read(request, id):
-    notification = get_object_or_404(
-        Notification,
-        id=id,
-        user=request.user
-    )
+# @api_view(['PATCH'])
+# @permission_classes([IsAuthenticated])
+# def mark_as_read(request, id):
+#     notification = get_object_or_404(
+#         Notification,
+#         id=id,
+#         user=request.user
+#     )
 
-    if notification.is_read:
-        return Response({
-            "success": True,
-            "message": "Notification already marked as read"
-        })
+#     if notification.is_read:
+#         return Response({
+#             "success": True,
+#             "message": "Notification already marked as read"
+#         })
 
-    notification.is_read = True
-    notification.save()
+#     notification.is_read = True
+#     notification.save()
 
-    return Response({
-        "success": True,
-        "message": "Notification marked as read"
-    })
+#     return Response({
+#         "success": True,
+#         "message": "Notification marked as read"
+#     })
 
 
 #--------------------------
@@ -131,592 +131,593 @@ def mark_as_read(request, id):
           
 #         }
 #     })
-from .serializer import UserLoginSerializer
+# from .serializer import UserLoginSerializer
 
-@csrf_exempt
-@api_view(['POST'])
-@authentication_classes([])
-@permission_classes([AllowAny])
-def user_login_api(request):
+# @csrf_exempt
+# @api_view(['POST'])
+# @authentication_classes([])
+# @permission_classes([AllowAny])
+# def user_login_api(request):
 
-    serializer = UserLoginSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+#     serializer = UserLoginSerializer(data=request.data)
+#     serializer.is_valid(raise_exception=True)
 
-    user = serializer.validated_data["user"]
+#     user = serializer.validated_data["user"]
 
-    # SAME TOKEN LOGIC
-    refresh = RefreshToken.for_user(user)
-    access_token = str(refresh.access_token)
+#     # SAME TOKEN LOGIC
+#     refresh = RefreshToken.for_user(user)
+#     access_token = str(refresh.access_token)
 
-    return Response({
-        'success': True,
-        'token': access_token,
-        'is_staff': user.is_staff,
-        'user': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-        }
-    })
-
-
-#-----------------------------------------------------------
-# Reseting the password of the user by admin
-#-----------------------------------------------------------
-from ams.services import notify
-@csrf_exempt
-def admin_reset_password(request, user_id):
-    if request.method != 'PUT':
-        return JsonResponse({'success': False, 'error': 'PUT request required'}, status=400)
-
-    try:
-        data = json.loads(request.body)
-    except:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
-
-    password = data.get('password')
-    confirm_password = data.get('confirm_password')
-
-    # Validation
-    if not password or not confirm_password:
-        return JsonResponse({'success': False, 'error': 'Password and confirm password are required.'}, status=400)
-
-    if password != confirm_password:
-        return JsonResponse({'success': False, 'error': 'Passwords do not match.'}, status=400)
-
-    # Get user by user_id from URL
-    try:
-        user = Adduser.objects.get(id=user_id)
-    except Adduser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
-
-    # Update password
-    user.set_password(password)
-    user.save()
-
-    notify(
-        user=user,
-        title="Password Changed",
-        message="Your account password was reset by the admin. Please login and change it if needed.",
-        type="security"
-    )
+#     return Response({
+#         'success': True,
+#         'token': access_token,
+#         'is_staff': user.is_staff,
+#         'user': {
+#             'id': user.id,
+#             'username': user.username,
+#             'email': user.email,
+#         }
+#     })
 
 
-    # Send new password via email
-    subject = "Your Account Password Has Been Updated"
-    message = f"""
-Hello {user.username},
+# #-----------------------------------------------------------
+# # Reseting the password of the user by admin
+# #-----------------------------------------------------------
+# from ams.services import notify
+# @csrf_exempt
+# def admin_reset_password(request, user_id):
+#     if request.method != 'PUT':
+#         return JsonResponse({'success': False, 'error': 'PUT request required'}, status=400)
 
-Your account password has been updated by the admin.
+#     try:
+#         data = json.loads(request.body)
+#     except:
+#         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
 
-Login Details:
-------------------------
-Username: {user.username}
-Email: {user.email}
-New Password: {password}
+#     password = data.get('password')
+#     confirm_password = data.get('confirm_password')
 
-Please log in using this password and change it if needed.
+#     # Validation
+#     if not password or not confirm_password:
+#         return JsonResponse({'success': False, 'error': 'Password and confirm password are required.'}, status=400)
 
-Thanks,
-The Team
-"""
-    try:
-        send_mail(subject, message, 'kundanchapagain555@gmail.com', [user.email])
-    except:
-        return JsonResponse({'success': True, 'message': 'Password updated, but failed to send email.'})
+#     if password != confirm_password:
+#         return JsonResponse({'success': False, 'error': 'Passwords do not match.'}, status=400)
 
-    return JsonResponse({'success': True, 'message': 'Password updated successfully'})
+#     # Get user by user_id from URL
+#     try:
+#         user = Adduser.objects.get(id=user_id)
+#     except Adduser.DoesNotExist:
+#         return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
 
-# Attendence page ko lagi,user specific data haru 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def dashboard_api(request):
-    """
-    Return logged-in user info using JWT authentication, structured for frontend.
-    """
-    user = request.user  # DRF sets this from the JWT
+#     # Update password
+#     user.set_password(password)
+#     user.save()
 
-    return Response({
-        'user': {
-            'userId': user.id,       # matches frontend's userId field
-            'username': getattr(user, 'username', ''),  # matches frontend's name
-            'email': user.email,
-            'contactNumber': getattr(user, 'contact_number', ''),  # optional, if you have this field
-            'role': getattr(user, 'role', ''),  # optional, if you have a role field
-            'address': getattr(user, 'address', ''), 
-            'employee_id': getattr(user, 'employee_id', ''), 
+#     notify(
+#         user=user,
+#         title="Password Changed",
+#         message="Your account password was reset by the admin. Please login and change it if needed.",
+#         type="security"
+#     )
+
+
+#     # Send new password via email
+#     subject = "Your Account Password Has Been Updated"
+#     message = f"""
+# Hello {user.username},
+
+# Your account password has been updated by the admin.
+
+# Login Details:
+# ------------------------
+# Username: {user.username}
+# Email: {user.email}
+# New Password: {password}
+
+# Please log in using this password and change it if needed.
+
+# Thanks,
+# The Team
+# """
+#     try:
+#         send_mail(subject, message, 'kundanchapagain555@gmail.com', [user.email])
+#     except:
+#         return JsonResponse({'success': True, 'message': 'Password updated, but failed to send email.'})
+
+#     return JsonResponse({'success': True, 'message': 'Password updated successfully'})
+
+# # Attendence page ko lagi,user specific data haru 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def dashboard_api(request):
+#     """
+#     Return logged-in user info using JWT authentication, structured for frontend.
+#     """
+#     user = request.user  # DRF sets this from the JWT
+
+#     return Response({
+#         'user': {
+#             'userId': user.id,       # matches frontend's userId field
+#             'username': getattr(user, 'username', ''),  # matches frontend's name
+#             'email': user.email,
+#             'contactNumber': getattr(user, 'contact_number', ''),  # optional, if you have this field
+#             'role': getattr(user, 'role', ''),  # optional, if you have a role field
+#             'address': getattr(user, 'address', ''), 
+#             'employee_id': getattr(user, 'employee_id', ''), 
             
-        },
-        'success': True
-    })
+#         },
+#         'success': True
+#     })
 
-#---mark attendence ho
-def is_within_time_window():
-    now = datetime.now().time()  # current server time
-    return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
+# #---mark attendence ho
+# def is_within_time_window():
+#     now = datetime.now().time()  # current server time
+#     return settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME
 
 
-@csrf_exempt
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def attendance_api(request):
-    user = request.user
-    client_ip = get_client_ip(request)
+# @csrf_exempt
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def attendance_api(request):
+#     user = request.user
+#     client_ip = get_client_ip(request)
 
-    if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
-        return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
-    if not is_within_time_window():
-        return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
+#     if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
+#         return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
+#     if not is_within_time_window():
+#         return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
     
-    # Check if already marked today
-    today = date.today()
+#     # Check if already marked today
+#     today = date.today()
     
-    if is_holiday(today):
-        return Response({"success": False, "error": "Attendance cannot be marked on a holiday." }, status=403)
+#     if is_holiday(today):
+#         return Response({"success": False, "error": "Attendance cannot be marked on a holiday." }, status=403)
     
-    if Attendance.objects.filter(user=user, date=today).exists():
-        return Response({'success': False, 'error': 'Attendance already marked today.'})
+#     if Attendance.objects.filter(user=user, date=today).exists():
+#         return Response({'success': False, 'error': 'Attendance already marked today.'})
     
-    # Determine punctuality status based on check-in time
-    current_time = datetime.now().time()
-    status = "On Time" if current_time <= datetime.strptime("09:30:00", "%H:%M:%S").time() else "Late"
+#     # Determine punctuality status based on check-in time
+#     current_time = datetime.now().time()
+#     status = "On Time" if current_time <= datetime.strptime("09:30:00", "%H:%M:%S").time() else "Late"
 
-    # Save attendance (with new attendance_status field)
-    attendance = Attendance.objects.create(
-        user=user,
-        ip_address=client_ip,
-        status=status,                       #  On Time / Late
-        attendance_status=Attendance.ATT_PRESENT,  # new field for Present / Absent
-        date=today,
-        check_in_time=timezone.now()
-    )
-    return Response({
-        'success': True,
-        'attendance': {
-            'sn': attendance.id,
-            'date': attendance.date.strftime("%m/%d/%Y"),
-            'time': attendance.check_in_time.strftime("%H:%M:%S %p"),
-            'ip': attendance.ip_address,
-            'status': attendance.status,               # On Time / Late
-            'attendance_status': attendance.attendance_status  # Present / Absent
-        }
-    }) 
+#     # Save attendance (with new attendance_status field)
+#     attendance = Attendance.objects.create(
+#         user=user,
+#         ip_address=client_ip,
+#         status=status,                       #  On Time / Late
+#         attendance_status=Attendance.ATT_PRESENT,  # new field for Present / Absent
+#         date=today,
+#         check_in_time=timezone.now()
+#     )
+#     return Response({
+#         'success': True,
+#         'attendance': {
+#             'sn': attendance.id,
+#             'date': attendance.date.strftime("%m/%d/%Y"),
+#             'time': attendance.check_in_time.strftime("%H:%M:%S %p"),
+#             'ip': attendance.ip_address,
+#             'status': attendance.status,               # On Time / Late
+#             'attendance_status': attendance.attendance_status  # Present / Absent
+#         }
+#     }) 
 
-#------------------------------------
-# auto mark attendence absent function
-#-------------------------------------
-def auto_mark_absent(request, secret_key):
-    if secret_key != settings.AUTO_MARK_SECRET:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
+# #------------------------------------
+# # auto mark attendence absent function
+# #-------------------------------------
+# def auto_mark_absent(request, secret_key):
+#     if secret_key != settings.AUTO_MARK_SECRET:
+#         return JsonResponse({'error': 'Unauthorized'}, status=401)
 
-    today = date.today()
-    now_time = datetime.now().time()
-    # Skip holidays & weekends
-    if is_holiday(today) or today.weekday() == 5:
-        return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
+#     today = date.today()
+#     now_time = datetime.now().time()
+#     # Skip holidays & weekends
+#     if is_holiday(today) or today.weekday() == 5:
+#         return JsonResponse({'status': 'No attendance update today (holiday/weekend).'})
 
-    # Define attendance timings
-    start_attendance_time = time(10, 00)  # 10:00 AM
-    end_attendance_time = time(12, 00)    # 11:00 AM
+#     # Define attendance timings
+#     start_attendance_time = time(10, 00)  # 10:00 AM
+#     end_attendance_time = time(12, 00)    # 11:00 AM
 
-    # Case 1: Before 10:00 AM → no attendance allowed
-    if now_time < start_attendance_time:
-        return JsonResponse({'status': 'Attendance not open yet. Please come after 10:00 AM.'})
+#     # Case 1: Before 10:00 AM → no attendance allowed
+#     if now_time < start_attendance_time:
+#         return JsonResponse({'status': 'Attendance not open yet. Please come after 10:00 AM.'})
 
-    # Case 2: Between 10:00 AM and 11:00 AM → attendance open
-    if start_attendance_time <= now_time < end_attendance_time:
-        return JsonResponse({'status': 'Attendance window open. Users can mark attendance now.'})
+#     # Case 2: Between 10:00 AM and 11:00 AM → attendance open
+#     if start_attendance_time <= now_time < end_attendance_time:
+#         return JsonResponse({'status': 'Attendance window open. Users can mark attendance now.'})
 
-    # Case 3: After 11:00 AM → auto-mark absent
-    if now_time >= end_attendance_time:
-        users = Adduser.objects.filter(is_active=True)
-        updated_count = 0
+#     # Case 3: After 11:00 AM → auto-mark absent
+#     if now_time >= end_attendance_time:
+#         users = Adduser.objects.filter(is_active=True)
+#         updated_count = 0
 
-        for user in users:
-            attendance = Attendance.objects.filter(user=user, date=today).first()
+#         for user in users:
+#             attendance = Attendance.objects.filter(user=user, date=today).first()
 
-            # Skip if already marked present
-            if attendance and attendance.attendance_status == Attendance.ATT_PRESENT:
-                continue
+#             # Skip if already marked present
+#             if attendance and attendance.attendance_status == Attendance.ATT_PRESENT:
+#                 continue
 
-            # Create absent record if not exists
-            if not attendance:
-                Attendance.objects.create(
-                    user=user,
-                    date=today,
-                    attendance_status=Attendance.ATT_ABSENT,
-                    status="Absent",
-                    ip_address=None
-                )
-                updated_count += 1
+#             # Create absent record if not exists
+#             if not attendance:
+#                 Attendance.objects.create(
+#                     user=user,
+#                     date=today,
+#                     attendance_status=Attendance.ATT_ABSENT,
+#                     status="Absent",
+#                     ip_address=None
+#                 )
+#                 updated_count += 1
 
-        return JsonResponse({
-            'status': 'Auto-mark absent completed',
-            'users_marked_absent': updated_count
-        })
+#         return JsonResponse({
+#             'status': 'Auto-mark absent completed',
+#             'users_marked_absent': updated_count
+#         })
 
-# user attendence history
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def attendance_history_api(request):
-    user = request.user
-    records = user.attendances.order_by('-date').all()  # latest first
+# # user attendence history
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def attendance_history_api(request):
+#     user = request.user
+#     records = user.attendances.order_by('-date').all()  # latest first
 
-    data = [
-        {
-            'sn': idx + 1,
-            'date': att.date.strftime("%m/%d/%Y"),
-            'time': att.check_in_time.strftime("%H:%M:%S %p"),
-            'ip': att.ip_address,
-            'attendance_status':att.attendance_status,
-            'status': att.status
-        }
-        for idx, att in enumerate(records)
-    ]
+#     data = [
+#         {
+#             'sn': idx + 1,
+#             'date': att.date.strftime("%m/%d/%Y"),
+#             'time': att.check_in_time.strftime("%H:%M:%S %p"),
+#             'ip': att.ip_address,
+#             'attendance_status':att.attendance_status,
+#             'status': att.status
+#         }
+#         for idx, att in enumerate(records)
+#     ]
 
-    return Response({'success': True, 'records': data})
-#-----------------------------------------------
-#specific user attendence filter according to user id
+#     return Response({'success': True, 'records': data})
+# #-----------------------------------------------
+# #specific user attendence filter according to user id
 
-# from django.contrib.auth.models import Adduser
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])  # or add IsAdminUser for security
-def attendance_by_user(request, user_id):
-    # Get the user object (404 if not found)
-    user = get_object_or_404(Adduser, id=user_id)
+# # from django.contrib.auth.models import Adduser
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])  # or add IsAdminUser for security
+# def attendance_by_user(request, user_id):
+#     # Get the user object (404 if not found)
+#     user = get_object_or_404(Adduser, id=user_id)
 
-    # Filter attendance for that user
-    records = Attendance.objects.filter(user=user).order_by('-date')
+#     # Filter attendance for that user
+#     records = Attendance.objects.filter(user=user).order_by('-date')
 
-    data = [
-        {
-            'sn': idx + 1,
-            'date': att.date.strftime("%m/%d/%Y"),
-            'time': att.check_in_time.strftime("%H:%M:%S %p"),
-            'ip': att.ip_address,
-            'attendance_status':att.attendance_status,
-            'status': att.status
-        }
-        for idx, att in enumerate(records)
-    ]
+#     data = [
+#         {
+#             'sn': idx + 1,
+#             'date': att.date.strftime("%m/%d/%Y"),
+#             'time': att.check_in_time.strftime("%H:%M:%S %p"),
+#             'ip': att.ip_address,
+#             'attendance_status':att.attendance_status,
+#             'status': att.status
+#         }
+#         for idx, att in enumerate(records)
+#     ]
     
-    return Response({
-        'success': True,
-        'user': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-        },
-        'records': data
-    })
-# user attendence history for admin, for listing all
-@api_view(['GET'])
-@permission_classes([IsAdminUser, IsAuthenticated])
-# @permission_classes(IsAdminUser)  # Only admins can access
-def all_attendance_api(request):
-    """
-    API to list attendance of all users, latest first.
-    """
-    records = Attendance.objects.select_related('user').order_by('-date', '-check_in_time')
+#     return Response({
+#         'success': True,
+#         'user': {
+#             'id': user.id,
+#             'username': user.username,
+#             'email': user.email
+#         },
+#         'records': data
+#     })
+# # user attendence history for admin, for listing all
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser, IsAuthenticated])
+# # @permission_classes(IsAdminUser)  # Only admins can access
+# def all_attendance_api(request):
+#     """
+#     API to list attendance of all users, latest first.
+#     """
+#     records = Attendance.objects.select_related('user').order_by('-date', '-check_in_time')
     
-    data = [
-        {
-            'sn': idx + 1,
-            'id':att.id,
-            'username': f"{att.user.username} {att.user.get_full_name()}",
-            'date': att.date.strftime("%m/%d/%Y"),
-            'time': att.check_in_time.strftime("%H:%M:%S %p"),
-            'ip': att.ip_address,
-            'attendance_status':att.attendance_status,
-            'status': att.status
-        }
-        for idx, att in enumerate(records)
-    ]
-    return Response({'success': True, 'records': data})
+#     data = [
+#         {
+#             'sn': idx + 1,
+#             'id':att.id,
+#             'username': f"{att.user.username} {att.user.get_full_name()}",
+#             'date': att.date.strftime("%m/%d/%Y"),
+#             'time': att.check_in_time.strftime("%H:%M:%S %p"),
+#             'ip': att.ip_address,
+#             'attendance_status':att.attendance_status,
+#             'status': att.status
+#         }
+#         for idx, att in enumerate(records)
+#     ]
+#     return Response({'success': True, 'records': data})
  
 #--------------------------------------------------#
-# user banaune by admin
-def generate_temp_password(length=8):
-    import secrets, string
-    chars = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(chars) for _ in range(length))
-from django.contrib.auth import get_user_model
+# from ams.models.Role import Role
+# # user banaune by admin
+# def generate_temp_password(length=8):
+#     import secrets, string
+#     chars = string.ascii_letters + string.digits
+#     return ''.join(secrets.choice(chars) for _ in range(length))
+# from django.contrib.auth import get_user_model
 
-User = get_user_model()
+# User = get_user_model()
 
-@api_view(['POST'])
-@permission_classes([IsAdminUser])
-def create_user_api(request):
+# @api_view(['POST'])
+# @permission_classes([IsAdminUser])
+# def create_user_api(request):
 
-    data = request.data
+#     data = request.data
 
-    Full_Name = data.get("fullname") or data.get("Full_Name")
-    email = data.get("email")
-    role_name = data.get("role", "").strip() 
-    contact_number = data.get("contact_number", "")
-    address = data.get("address", "")
-    employee_id = data.get("employee_id", "")
+#     Full_Name = data.get("fullname") or data.get("Full_Name")
+#     email = data.get("email")
+#     role_name = data.get("role", "").strip() 
+#     contact_number = data.get("contact_number", "")
+#     address = data.get("address", "")
+#     employee_id = data.get("employee_id", "")
 
-    if not email:
-        return Response({"detail": "Email is required"}, status=400)
+#     if not email:
+#         return Response({"detail": "Email is required"}, status=400)
 
-    if not Full_Name:
-        return Response({"detail": "Fullname is required"}, status=400)
+#     if not Full_Name:
+#         return Response({"detail": "Fullname is required"}, status=400)
     
-    if not employee_id:
-        return Response({"detail": "Employee ID is required"}, status=400)
+#     if not employee_id:
+#         return Response({"detail": "Employee ID is required"}, status=400)
     
-    if not contact_number:
-        return Response({"detail": "Contact number is required"}, status=400)
+#     if not contact_number:
+#         return Response({"detail": "Contact number is required"}, status=400)
     
-    if not address:
-        return Response({"detail": "Address is required"}, status=400)
+#     if not address:
+#         return Response({"detail": "Address is required"}, status=400)
 
-    username = email.split("@")[0]
+#     username = email.split("@")[0]
 
-    if User.objects.filter(username=username).exists():
-        return Response({"detail": "Username already exists"}, status=400)
+#     if User.objects.filter(username=username).exists():
+#         return Response({"detail": "Username already exists"}, status=400)
 
-    if User.objects.filter(email=email).exists():
-        return Response({"detail": "Email already exists"}, status=400)
+#     if User.objects.filter(email=email).exists():
+#         return Response({"detail": "Email already exists"}, status=400)
     
-    if User.objects.filter(employee_id=employee_id).exists():
-        return Response({"detail": "Employee ID already exists"}, status=400)
+#     if User.objects.filter(employee_id=employee_id).exists():
+#         return Response({"detail": "Employee ID already exists"}, status=400)
 
-    temp_password = generate_temp_password()
+#     temp_password = generate_temp_password()
 
-    # CORRECT USER CREATION
-    user = User.objects.create_user(
-        username=username,
-        email=email,
-        password=temp_password,
-    )
-    user.Full_Name = Full_Name
-    user.contact_number=contact_number
-    user.address=address
-    user.employee_id=employee_id
-    user.is_staff = False
-    user.is_superuser = False
-    user.is_active = True
+#     # CORRECT USER CREATION
+#     user = User.objects.create_user(
+#         username=username,
+#         email=email,
+#         password=temp_password,
+#     )
+#     user.Full_Name = Full_Name
+#     user.contact_number=contact_number
+#     user.address=address
+#     user.employee_id=employee_id
+#     user.is_staff = False
+#     user.is_superuser = False
+#     user.is_active = True
 
-    if role_name:
-        role_obj, created = Role.objects.get_or_create(name=role_name)
-        user.role = role_obj
-    else:
-        user.role = None  # optional: no role
+#     if role_name:
+#         role_obj, created = Role.objects.get_or_create(name=role_name)
+#         user.role = role_obj
+#     else:
+#         user.role = None  # optional: no role
 
-    user.save()
+#     user.save()
 
-    user.save()
+#     user.save()
 
-    # Send email
-    subject = "Your Account Login Details"
-    message = f"""
-Hello {Full_Name},
+#     # Send email
+#     subject = "Your Account Login Details"
+#     message = f"""
+# Hello {Full_Name},
 
-Your account has been created successfully.
+# Your account has been created successfully.
 
-Username: {username}
-Temporary Password: {temp_password}
+# Username: {username}
+# Temporary Password: {temp_password}
 
-Please log in and change your password immediately.
-"""
+# Please log in and change your password immediately.
+# """
 
-    send_mail(subject, message, 'kundanchapagain555@gmail.com', [email])
+#     send_mail(subject, message, 'kundanchapagain555@gmail.com', [email])
 
-    serializer = AdduserSerializer(user)
+#     serializer = AdduserSerializer(user)
 
-    return Response({
-        "success": True,
-        "message": "User created successfully",
-        "user": serializer.data
-    })
+#     return Response({
+#         "success": True,
+#         "message": "User created successfully",
+#         "user": serializer.data
+#     })
 
-#api for the role creation
-@api_view(['POST'])
-@permission_classes([IsAdminUser])
-def create_role_api(request):
-    role_name = request.data.get("role")
+# #api for the role creation
+# @api_view(['POST'])
+# @permission_classes([IsAdminUser])
+# def create_role_api(request):
+#     role_name = request.data.get("role")
 
-    if not role_name:
-        return Response({"detail": "Role name is required"}, status=400)
+#     if not role_name:
+#         return Response({"detail": "Role name is required"}, status=400)
 
-    # Normalize the input (e.g. 'frontend ' -> 'Frontend')
-    role_name = role_name.strip().title()
+#     # Normalize the input (e.g. 'frontend ' -> 'Frontend')
+#     role_name = role_name.strip().title()
 
-    role, created = Role.objects.get_or_create(name=role_name)
+#     role, created = Role.objects.get_or_create(name=role_name)
 
-    return Response({
-        "success": True,
-        "message": "Role created" if created else "Role already exists",
-        "role": role.name
-    }, status=201 if created else 200)
+#     return Response({
+#         "success": True,
+#         "message": "Role created" if created else "Role already exists",
+#         "role": role.name
+#     }, status=201 if created else 200)
 
 
 #getiing all the roles
-@api_view(["GET"])
-def get_roles_api(request):
-    roles = Role.objects.all().values("id", "name")
-    return Response({"success": True, "roles": list(roles)}, status=200)
+# @api_view(["GET"])
+# def get_roles_api(request):
+#     roles = Role.objects.all().values("id", "name")
+#     return Response({"success": True, "roles": list(roles)}, status=200)
 
 #update or edit the role 
-@api_view(["PUT"])
-@permission_classes([IsAdminUser])   # optional, remove if frontend test only
-def edit_role_api(request, role_id):
-    try:
-        role = Role.objects.get(id=role_id)
-    except Role.DoesNotExist:
-        return Response(
-            {"success": False, "error": "Role not found"},
-            status=404
-        )
+# @api_view(["PUT"])
+# @permission_classes([IsAdminUser])   # optional, remove if frontend test only
+# def edit_role_api(request, role_id):
+#     try:
+#         role = Role.objects.get(id=role_id)
+#     except Role.DoesNotExist:
+#         return Response(
+#             {"success": False, "error": "Role not found"},
+#             status=404
+#         )
 
-    new_name = request.data.get("role")
-    if not new_name:
-        return Response(
-            {"success": False, "error": "New role name is required"},
-            status=400
-        )
+#     new_name = request.data.get("role")
+#     if not new_name:
+#         return Response(
+#             {"success": False, "error": "New role name is required"},
+#             status=400
+#         )
 
-    new_name = new_name.strip().title()
+#     new_name = new_name.strip().title()
 
-    # Avoid renaming conflict
-    if Role.objects.exclude(id=role_id).filter(name=new_name).exists():
-        return Response(
-            {"success": False, "error": "Role name already exists"},
-            status=409
-        )
+#     # Avoid renaming conflict
+#     if Role.objects.exclude(id=role_id).filter(name=new_name).exists():
+#         return Response(
+#             {"success": False, "error": "Role name already exists"},
+#             status=409
+#         )
 
-    role.name = new_name
-    role.save()
+#     role.name = new_name
+#     role.save()
 
-    return Response({
-        "success": True,
-        "message": "Role updated successfully",
-        "role": role.name
-    }, status=200)
+#     return Response({
+#         "success": True,
+#         "message": "Role updated successfully",
+#         "role": role.name
+#     }, status=200)
 
 
 
-#----------------------------------------
-# add profile picture of user
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])
-def upload_profile_picture_api(request, user_id):
-    target_user = get_object_or_404(Adduser, id=user_id)
+# #----------------------------------------
+# # add profile picture of user
+# @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+# @parser_classes([MultiPartParser, FormParser])
+# def upload_profile_picture_api(request, user_id):
+#     target_user = get_object_or_404(Adduser, id=user_id)
 
-    #  Permission rules
-    if request.user != target_user and not request.user.is_staff:
-        return Response(
-            {"success": False, "error": "You are not allowed to update this profile"},
-            status=status.HTTP_403_FORBIDDEN
-        )
+#     #  Permission rules
+#     if request.user != target_user and not request.user.is_staff:
+#         return Response(
+#             {"success": False, "error": "You are not allowed to update this profile"},
+#             status=status.HTTP_403_FORBIDDEN
+#         )
 
-    profile_picture = request.FILES.get("profile_picture")
-    if not profile_picture:
-        return Response(
-            {"success": False, "error": "No profile picture provided"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+#     profile_picture = request.FILES.get("profile_picture")
+#     if not profile_picture:
+#         return Response(
+#             {"success": False, "error": "No profile picture provided"},
+#             status=status.HTTP_400_BAD_REQUEST
+#         )
 
-    if not profile_picture.content_type.startswith("image/"):
-        return Response(
-            {"success": False, "error": "Only image files are allowed"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+#     if not profile_picture.content_type.startswith("image/"):
+#         return Response(
+#             {"success": False, "error": "Only image files are allowed"},
+#             status=status.HTTP_400_BAD_REQUEST
+#         )
 
-    # Remove old picture
-    if target_user.profile_picture:
-        destroy(target_user.profile_picture.public_id)
+#     # Remove old picture
+#     if target_user.profile_picture:
+#         destroy(target_user.profile_picture.public_id)
 
-    target_user.profile_picture = profile_picture
-    target_user.save()
+#     target_user.profile_picture = profile_picture
+#     target_user.save()
 
-    return Response({
-        "success": True,
-        "message": "Profile picture uploaded successfully",
-        "profile_picture_url": target_user.profile_picture.url
-    })
-#view of user profile picture
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def get_profile_picture_api(request, user_id):
-    user = get_object_or_404(Adduser, id=user_id)
+#     return Response({
+#         "success": True,
+#         "message": "Profile picture uploaded successfully",
+#         "profile_picture_url": target_user.profile_picture.url
+#     })
+# #view of user profile picture
+# @api_view(["GET"])
+# @permission_classes([AllowAny])
+# def get_profile_picture_api(request, user_id):
+#     user = get_object_or_404(Adduser, id=user_id)
 
-    # Optional: allow only user themselves or admin
-    if request.user != user and not request.user.is_staff:
-        return Response({"success": False, "error": "Permission denied"}, status=403)
+#     # Optional: allow only user themselves or admin
+#     if request.user != user and not request.user.is_staff:
+#         return Response({"success": False, "error": "Permission denied"}, status=403)
 
-    if not user.profile_picture:
-        return Response(
-            {"success": False, "error": "User has no profile picture"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+#     if not user.profile_picture:
+#         return Response(
+#             {"success": False, "error": "User has no profile picture"},
+#             status=status.HTTP_404_NOT_FOUND
+#         )
 
-    return Response({
-        "success": True,
-        "profile_picture_url": user.profile_picture.url
-    }, status=status.HTTP_200_OK)
+#     return Response({
+#         "success": True,
+#         "profile_picture_url": user.profile_picture.url
+#     }, status=status.HTTP_200_OK)
 
-#---------------------------------------
-# edit user ,role ra status like active or disable garcha admin le
-@csrf_exempt
-@api_view(["POST"])
-def edit_user_api(request, user_id):
-    try:
-        user = Adduser.objects.get(id=user_id)
-    except Adduser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+# #---------------------------------------
+# # edit user ,role ra status like active or disable garcha admin le
+# @csrf_exempt
+# @api_view(["POST"])
+# def edit_user_api(request, user_id):
+#     try:
+#         user = Adduser.objects.get(id=user_id)
+#     except Adduser.DoesNotExist:
+#         return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
 
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+#     try:
+#         data = json.loads(request.body)
+#     except json.JSONDecodeError:
+#         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
     
-    changes = []  # 🔹 track what changed
+#     changes = []  # 🔹 track what changed
 
 
-    if 'is_active' in data:
-        user.is_active = data['is_active']
-        changes.append("Account status updated")
+#     if 'is_active' in data:
+#         user.is_active = data['is_active']
+#         changes.append("Account status updated")
 
-    if 'email' in data:
-        user.email = data['email']
-        changes.append("Email updated")
+#     if 'email' in data:
+#         user.email = data['email']
+#         changes.append("Email updated")
 
-    if 'contact_number' in data:
-        user.contact_number = data['contact_number']
-        changes.append("Contact number updated")
+#     if 'contact_number' in data:
+#         user.contact_number = data['contact_number']
+#         changes.append("Contact number updated")
 
-    if 'role' in data:
-        if data['role'] in dict(Adduser.ROLE_CHOICES): 
-            user.role = data['role']
-            changes.append("Role updated")
-        else:
-            return JsonResponse({'success': False, 'error': 'Invalid role'}, status=400)
+#     if 'role' in data:
+#         if data['role'] in dict(Adduser.ROLE_CHOICES): 
+#             user.role = data['role']
+#             changes.append("Role updated")
+#         else:
+#             return JsonResponse({'success': False, 'error': 'Invalid role'}, status=400)
 
-    user.save()
-       #  SEND NOTIFICATION TO USER
-    if changes:
-        notify(
-            user=user,
-            title="Account Updated",
-            message="Your account details were updated by admin: " + ", ".join(changes),
-            type="account"
-        )
+#     user.save()
+#        #  SEND NOTIFICATION TO USER
+#     if changes:
+#         notify(
+#             user=user,
+#             title="Account Updated",
+#             message="Your account details were updated by admin: " + ", ".join(changes),
+#             type="account"
+#         )
 
-    return JsonResponse({
-        'success': True,
-        'user': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_active': user.is_active,
-            'role': user.role,
-            'contact_number': user.contact_number,
-        }
-    })
+#     return JsonResponse({
+#         'success': True,
+#         'user': {
+#             'id': user.id,
+#             'username': user.username,
+#             'email': user.email,
+#             'is_active': user.is_active,
+#             'role': user.role,
+#             'contact_number': user.contact_number,
+#         }
+#     })
 
 # all user list 
 # @csrf_exempt
@@ -736,66 +737,66 @@ def edit_user_api(request, user_id):
 #         'disabled_users': disabled_users
 #     }, status=status.HTTP_200_OK)
 
-@csrf_exempt
-@api_view(["GET"])
-def user_list_api(request):
-    users = Adduser.objects.all()
-    serializer = AdduserSerializer(users, many=True)
+# @csrf_exempt
+# @api_view(["GET"])
+# def user_list_api(request):
+#     users = Adduser.objects.all()
+#     serializer = AdduserSerializer(users, many=True)
 
-    active_users = []
-    disabled_users = []
+#     active_users = []
+#     disabled_users = []
 
-    for u in serializer.data:
-        # use get() to avoid KeyError
+#     for u in serializer.data:
+#         # use get() to avoid KeyError
         
-        is_active = u.get('is_active', False)
-        if is_active:
-            active_users.append(u)
-        else:
-            disabled_users.append(u)
+#         is_active = u.get('is_active', False)
+#         if is_active:
+#             active_users.append(u)
+#         else:
+#             disabled_users.append(u)
 
-    return Response({
-        'success': True,
-        'active_users': active_users,
-        'disabled_users': disabled_users
-    })
+#     return Response({
+#         'success': True,
+#         'active_users': active_users,
+#         'disabled_users': disabled_users
+#     })
 
 
-# deleting the user
-@csrf_exempt
-def user_delete(request, user_id):
-    if request.method != 'DELETE':
-        return JsonResponse(
-            {'success': False, 'error': 'DELETE request required'},
-            status=400
-        )
+# # deleting the user
+# @csrf_exempt
+# def user_delete(request, user_id):
+#     if request.method != 'DELETE':
+#         return JsonResponse(
+#             {'success': False, 'error': 'DELETE request required'},
+#             status=400
+#         )
 
-    try:
-        user = Adduser.objects.get(id=user_id)
-        user.delete()
-        return JsonResponse(
-            {'success': True, 'message': 'User deleted successfully'},
-            status=200
-        )
+#     try:
+#         user = Adduser.objects.get(id=user_id)
+#         user.delete()
+#         return JsonResponse(
+#             {'success': True, 'message': 'User deleted successfully'},
+#             status=200
+#         )
 
-    except Adduser.DoesNotExist:
-        return JsonResponse(
-            {'success': False, 'error': 'User not found'},  
-            status=404
-        )
-# only disable the user 
-@csrf_exempt
-def user_disable_api(request, user_id):
-    if request.method != 'POST':  # POST for disabling
-        return JsonResponse({'success': False, 'error': 'POST request required'}, status=400)
+#     except Adduser.DoesNotExist:
+#         return JsonResponse(
+#             {'success': False, 'error': 'User not found'},  
+#             status=404
+#         )
+# # only disable the user 
+# @csrf_exempt
+# def user_disable_api(request, user_id):
+#     if request.method != 'POST':  # POST for disabling
+#         return JsonResponse({'success': False, 'error': 'POST request required'}, status=400)
 
-    try:
-        user = Adduser.objects.get(id=user_id)
-        user.is_active = False
-        user.save()
-        return JsonResponse({'success': True, 'message': 'User disabled successfully'})
-    except Adduser.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+#     try:
+#         user = Adduser.objects.get(id=user_id)
+#         user.is_active = False
+#         user.save()
+#         return JsonResponse({'success': True, 'message': 'User disabled successfully'})
+#     except Adduser.DoesNotExist:
+#         return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
 
 # #-----------------------------------------------------------
 # # subbmiting the leave 
@@ -1064,209 +1065,210 @@ def user_disable_api(request, user_id):
 #         'status':leave.status,
 #         'message': f'Leave {leave.status} successfully.'
 #     })  
-# only admin sees the details of the 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def present_absent_summary_api(request):
-    user = request.user
-    if not user.is_staff:
-        return Response(
-            {"success": False, "error": "Permission denied"},
-            status=403
-        )
 
-    summary = (
-        Attendance.objects
-        .values('user__id', 'user__username', 'user__email')
-        .annotate(
-            present_days=Count('id', filter=Q(status='Present')),
-            absent_days=Count('id', filter=Q(status='Absent')),
-            total_days=Count('id')
-        )
-    )
+# # only admin sees the details of the 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def present_absent_summary_api(request):
+#     user = request.user
+#     if not user.is_staff:
+#         return Response(
+#             {"success": False, "error": "Permission denied"},
+#             status=403
+#         )
 
-    return Response({
-        "success": True,
-        "data": summary
-    })
+#     summary = (
+#         Attendance.objects
+#         .values('user__id', 'user__username', 'user__email')
+#         .annotate(
+#             present_days=Count('id', filter=Q(status='Present')),
+#             absent_days=Count('id', filter=Q(status='Absent')),
+#             total_days=Count('id')
+#         )
+#     )
 
-# making the view for the only one user details of the user 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def my_attendance_summary_api(request):
-    user = request.user
+#     return Response({
+#         "success": True,
+#         "data": summary
+#     })
 
-    print("AUTH USER ID:", user.id)
-    print("AUTH USER EMAIL:", user.email)
+# # making the view for the only one user details of the user 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def my_attendance_summary_api(request):
+#     user = request.user
 
-    present_days = Attendance.objects.filter(
-        user=user, attendance_status='Present'
-    ).count()
+#     print("AUTH USER ID:", user.id)
+#     print("AUTH USER EMAIL:", user.email)
 
-    absent_days = Attendance.objects.filter(
-        user=user, attendance_status='Absent'
-    ).count()
+#     present_days = Attendance.objects.filter(
+#         user=user, attendance_status='Present'
+#     ).count()
 
-    return Response({
-        "success": True,
-        "present_days": present_days,
-        "absent_days": absent_days,
-        "total_days": present_days + absent_days
-    })
+#     absent_days = Attendance.objects.filter(
+#         user=user, attendance_status='Absent'
+#     ).count()
+
+#     return Response({
+#         "success": True,
+#         "present_days": present_days,
+#         "absent_days": absent_days,
+#         "total_days": present_days + absent_days
+#     })
 
 #-----------------------------------------------------------
 # inserting holidays by admin
 #-----------------------------------------------------------
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def holiday_create_api(request):
-    user = request.user
-    if not user.is_staff:
-        return Response({"success": False, "error": "Permission denied"}, status=403)
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def holiday_create_api(request):
+#     user = request.user
+#     if not user.is_staff:
+#         return Response({"success": False, "error": "Permission denied"}, status=403)
 
-    start_date_str = request.data.get('start_date')
-    end_date_str = request.data.get('end_date')
-    description = request.data.get('description')
+#     start_date_str = request.data.get('start_date')
+#     end_date_str = request.data.get('end_date')
+#     description = request.data.get('description')
 
-    if not start_date_str or not description:
-        return Response({"success": False, "error": "start_date and description are required"}, status=400)
+#     if not start_date_str or not description:
+#         return Response({"success": False, "error": "start_date and description are required"}, status=400)
 
-    try:
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-        end_date = None
-        if end_date_str:
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-            if end_date < start_date:
-                return Response({"success": False, "error": "end_date cannot be before start_date"}, status=400)
-    except ValueError:
-        return Response({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}, status=400)
+#     try:
+#         start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+#         end_date = None
+#         if end_date_str:
+#             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+#             if end_date < start_date:
+#                 return Response({"success": False, "error": "end_date cannot be before start_date"}, status=400)
+#     except ValueError:
+#         return Response({"success": False, "error": "Invalid date format. Use YYYY-MM-DD"}, status=400)
 
-    holiday = Holiday.objects.create(start_date=start_date, end_date=end_date, description=description)
+#     holiday = Holiday.objects.create(start_date=start_date, end_date=end_date, description=description)
     
-     # Notify all active users
-    User = get_user_model()
-    users = User.objects.filter(is_active=True,is_staff=False)
+#      # Notify all active users
+#     User = get_user_model()
+#     users = User.objects.filter(is_active=True,is_staff=False)
 
-    date_text = (
-        f"{start_date} to {end_date}" if end_date else f"{start_date}"
-    )
+#     date_text = (
+#         f"{start_date} to {end_date}" if end_date else f"{start_date}"
+#     )
 
-    for u in users:
-        notify(
-            user=u,
-            title="New Holiday",
-            message=f"{description} ({date_text})",
-            type="holiday"
-        )
+#     for u in users:
+#         notify(
+#             user=u,
+#             title="New Holiday",
+#             message=f"{description} ({date_text})",
+#             type="holiday"
+#         )
 
-    return Response({
-        "success": True,
-        "holiday": {
-            "id": holiday.id,
-            "start_date": holiday.start_date.strftime("%Y-%m-%d"),
-            "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
-            "description": holiday.description
-        }
-    }, status=201)
+#     return Response({
+#         "success": True,
+#         "holiday": {
+#             "id": holiday.id,
+#             "start_date": holiday.start_date.strftime("%Y-%m-%d"),
+#             "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
+#             "description": holiday.description
+#         }
+#     }, status=201)
 #-----------------------------------------------------------#
 # Getting all the holidays
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def holiday_list_api(request):
-    holidays = Holiday.objects.all().order_by('-start_date')
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
+# def holiday_list_api(request):
+#     holidays = Holiday.objects.all().order_by('-start_date')
 
-    data = []
-    for holiday in holidays:
-        data.append({
-            "id": holiday.id,
-            "start_date": holiday.start_date.strftime("%Y-%m-%d"),
-            "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
-            "description": holiday.description
-        })
+#     data = []
+#     for holiday in holidays:
+#         data.append({
+#             "id": holiday.id,
+#             "start_date": holiday.start_date.strftime("%Y-%m-%d"),
+#             "end_date": holiday.end_date.strftime("%Y-%m-%d") if holiday.end_date else None,
+#             "description": holiday.description
+#         })
 
-    return Response({
-        "success": True,
-        "holidays": data
-    })
+#     return Response({
+#         "success": True,
+#         "holidays": data
+#     })
 #-----------------------------------------------------------#
 # delete holiday by admin
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def holiday_delete_api(request):
-    user = request.user
-    if not user.is_staff:
-        return Response({"success": False, "error": "Permission denied"}, status=403)
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated])
+# def holiday_delete_api(request):
+#     user = request.user
+#     if not user.is_staff:
+#         return Response({"success": False, "error": "Permission denied"}, status=403)
 
-    holiday_id = request.data.get("holiday_id")
-    date_str = request.data.get("date")  # you can also allow list of dates if needed
+#     holiday_id = request.data.get("holiday_id")
+#     date_str = request.data.get("date")  # you can also allow list of dates if needed
 
-    if not holiday_id or not date_str:
-        return Response({"success": False, "error": "holiday_id and date are required"}, status=400)
+#     if not holiday_id or not date_str:
+#         return Response({"success": False, "error": "holiday_id and date are required"}, status=400)
 
-    try:
-        delete_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        holiday = Holiday.objects.get(id=holiday_id)
-    except (ValueError, Holiday.DoesNotExist):
-        return Response({"success": False, "error": "Invalid data"}, status=400)
+#     try:
+#         delete_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+#         holiday = Holiday.objects.get(id=holiday_id)
+#     except (ValueError, Holiday.DoesNotExist):
+#         return Response({"success": False, "error": "Invalid data"}, status=400)
 
-    start = holiday.start_date
-    end = holiday.end_date or holiday.start_date
-    changes = []
+#     start = holiday.start_date
+#     end = holiday.end_date or holiday.start_date
+#     changes = []
 
-    if delete_date < start or delete_date > end:
-        return Response({"success": False, "error": "Date not in holiday range"}, status=400)
+#     if delete_date < start or delete_date > end:
+#         return Response({"success": False, "error": "Date not in holiday range"}, status=400)
 
-    deleted_dates = []  # Collect all affected dates
+#     deleted_dates = []  # Collect all affected dates
 
-    # CASE 1: single-day holiday
-    if start == end == delete_date:
-        deleted_dates.append(delete_date)
-        holiday.delete()
-        changes.append("Holiday deleted")
-    # CASE 2: deleting start date
-    elif delete_date == start:
-        deleted_dates.append(start)
-        holiday.start_date = start + timedelta(days=1)
-        holiday.save()
-        changes.append("Holiday start date updated")
-    # CASE 3: deleting end date
-    elif delete_date == end:
-        deleted_dates.append(end)
-        holiday.end_date = end - timedelta(days=1)
-        holiday.save()
-        changes.append("Holiday end date updated")
-    # CASE 4: deleting middle date → split
-    else:
-        # All dates before delete_date
-        Holiday.objects.create(
-            start_date=start,
-            end_date=delete_date - timedelta(days=1),
-            description=holiday.description
-        )
-        # Update current holiday to start after deleted date
-        holiday.start_date = delete_date + timedelta(days=1)
-        holiday.save()
-        deleted_dates.append(delete_date)
-        changes.append("Holiday split into two ranges")
+#     # CASE 1: single-day holiday
+#     if start == end == delete_date:
+#         deleted_dates.append(delete_date)
+#         holiday.delete()
+#         changes.append("Holiday deleted")
+#     # CASE 2: deleting start date
+#     elif delete_date == start:
+#         deleted_dates.append(start)
+#         holiday.start_date = start + timedelta(days=1)
+#         holiday.save()
+#         changes.append("Holiday start date updated")
+#     # CASE 3: deleting end date
+#     elif delete_date == end:
+#         deleted_dates.append(end)
+#         holiday.end_date = end - timedelta(days=1)
+#         holiday.save()
+#         changes.append("Holiday end date updated")
+#     # CASE 4: deleting middle date → split
+#     else:
+#         # All dates before delete_date
+#         Holiday.objects.create(
+#             start_date=start,
+#             end_date=delete_date - timedelta(days=1),
+#             description=holiday.description
+#         )
+#         # Update current holiday to start after deleted date
+#         holiday.start_date = delete_date + timedelta(days=1)
+#         holiday.save()
+#         deleted_dates.append(delete_date)
+#         changes.append("Holiday split into two ranges")
 
-    # ------------------------------------------------------
-    # Notify all active non-admin users ONE TIME
-    # ------------------------------------------------------
-    if deleted_dates:
-        User = get_user_model()
-        users = User.objects.filter(is_active=True, is_staff=False)  # only normal users
-        # Convert deleted_dates to readable string
-        deleted_dates_text = ", ".join([d.strftime("%Y-%m-%d") for d in deleted_dates])
+#     # ------------------------------------------------------
+#     # Notify all active non-admin users ONE TIME
+#     # ------------------------------------------------------
+#     if deleted_dates:
+#         User = get_user_model()
+#         users = User.objects.filter(is_active=True, is_staff=False)  # only normal users
+#         # Convert deleted_dates to readable string
+#         deleted_dates_text = ", ".join([d.strftime("%Y-%m-%d") for d in deleted_dates])
 
-        for u in users:
-            notify(
-                user=u,
-                title="Holiday Updated",
-                message=f"{holiday.description} has been removed/updated for the following date(s): {deleted_dates_text}.",
-                type="holiday"
-            )
+#         for u in users:
+#             notify(
+#                 user=u,
+#                 title="Holiday Updated",
+#                 message=f"{holiday.description} has been removed/updated for the following date(s): {deleted_dates_text}.",
+#                 type="holiday"
+#             )
 
-    return Response({"success": True, "message": "Holiday date removed successfully"})
+#     return Response({"success": True, "message": "Holiday date removed successfully"})
 
 

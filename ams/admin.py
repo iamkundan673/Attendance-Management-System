@@ -2,7 +2,8 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Adduser,Attendance
+from ams.models.Attendance import Attendance
+from ams.models.User import Adduser
 from leave.models import LeaveRequest
 from ip.models import OfficeIP
 

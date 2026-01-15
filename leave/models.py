@@ -1,6 +1,6 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
-from ams.models import Adduser
+from ams.models.User import Adduser 
 
 # Create your models here.
 # leave request model

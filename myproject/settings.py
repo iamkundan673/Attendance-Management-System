@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     "localhost",
     ".onrender.com",            # allows local access
     "127.0.0.1",            # default localhost
-    "192.168.1.68",         # your computer's LAN IP
+    "192.168.1.71",         # your computer's LAN IP
     "10.65.213.116",
     "10.213.222.116"
 ]
@@ -50,6 +50,11 @@ DEFAULT_FROM_EMAIL = os.environ.get("kundanchapagain555@gmail.com")  # Verified 
 
 
 # OFFICE_PUBLIC_IP = "27.34.111.72"
+# settings.py
+ALLOWED_PUBLIC_IP_RANGE = "27.34.111.0/24"
+# 26.647559272571538, 87.99316366714861
+OFFICE_LATITUDE = 26.647559272571538   # example
+OFFICE_LONGITUDE = 87.99316366714861
 
 # Application definition
 
@@ -172,7 +177,7 @@ from datetime import time
 
 # settings.py
 ATTENDANCE_START_TIME = time(10, 00)   # 9:00 AM
-ATTENDANCE_END_TIME = time(12, 00)    # 10:30 AM
+ATTENDANCE_END_TIME = time(18, 00)    # 10:30 AM
 
 # Secret key for auto-mark endpoint
 AUTO_MARK_SECRET = "attend-2025-9f8a2cX!@"  # store in environment variable in production
