@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 # Attendence page ko lagi,user specific data haru 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def dashboard_api(request):
     """
     Return logged-in user info using JWT authentication, structured for frontend.
