@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import date, datetime, time
 from django.shortcuts import get_object_or_404
 from ams.models import Attendance,User as Adduser
+from ams.models.User import  Adduser
 from django.conf import settings
 from ams.utils import get_client_ip, is_holiday
 from rest_framework.permissions import IsAdminUser
