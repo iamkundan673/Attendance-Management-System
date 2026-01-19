@@ -166,9 +166,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-ALLOWED_ATTENDANCE_IP_RANGE = [
-    "27.34.111.34",  # your office/campus static public IP
-]
+# ALLOWED_ATTENDANCE_IP_RANGE = [
+#     "27.34.111.34",  # your office/campus static public IP
+# ]
 
 # settings.py
 TIME_ZONE = 'Asia/Kathmandu'

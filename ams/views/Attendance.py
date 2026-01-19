@@ -13,7 +13,15 @@ from django.http import JsonResponse
 from ip.utils import get_client_ip, is_ip_allowed,distance_meters
 from django.db.models import Count, Q
 
+import ipaddress
 
+def is_ip_allowed(client_ip, cidr_range):
+    try:
+        ip = ipaddress.ip_address(client_ip)
+        network = ipaddress.ip_network(cidr_range, strict=False)
+        return ip in network
+    except ValueError:
+        return False
 
 
 #---mark attendence ho
@@ -30,7 +38,7 @@ def attendance_api(request):
     client_ip = get_client_ip(request)
 
     # IP range check
-    if not is_ip_allowed(client_ip, settings.ALLOWED_ATTENDANCE_IP_RANGE):
+    if not is_ip_allowed(client_ip, settings.ALLOWED_PUBLIC_IP_RANGE):
         return Response({
             'success': False,
             'error': 'Attendance can only be marked from the office network'
