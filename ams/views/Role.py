@@ -2,33 +2,41 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ams.models import Role
+from django.db import IntegrityError
 
 
 
 #api for the role creation
+
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def create_role_api(request):
     role_name = request.data.get("role")
 
     if not role_name:
-        return Response({"detail": "Role name is required"}, status=400)
+        return Response({"success": False, "detail": "Role name is required"}, status=400)
 
-    # Normalize the input (e.g. 'frontend ' -> 'Frontend')
     role_name = role_name.strip().title()
 
     try:
-        role, created = Role.objects.get_or_create(name=role_name)
-    except Exception as e:
-        # Catch DB or other errors
-        return Response({"success": False, "error": str(e)}, status=500)
+        # Case-insensitive check for existing role
+        if Role.objects.filter(name__iexact=role_name).exists():
+            return Response(
+                {"success": False, "message": "Role already exists"},
+                status=400
+            )
 
-    return Response({
-        "success": True,
-        "message": "Role created" if created else "Role already exists",
-        "role": role.name
-    }, status=201 if created else 200)
+        role = Role.objects.create(name=role_name)
+        return Response(
+            {"success": True, "message": "Role created", "role": role.name},
+            status=201
+        )
 
+    except IntegrityError:
+        return Response(
+            {"success": False, "error": "Database integrity error"},
+            status=400
+        )
 
 #getiing all the roles
 @api_view(["GET"])
