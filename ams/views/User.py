@@ -9,6 +9,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import parser_classes
 from django.shortcuts import get_object_or_404
 from ams.models.User import Adduser
+from ams.models import Role
 from cloudinary.uploader import destroy
 from rest_framework import status
 import json
