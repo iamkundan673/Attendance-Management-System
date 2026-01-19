@@ -139,12 +139,12 @@ def edit_user_api(request, user_id):
         changes.append("Contact number updated")
 
     if 'role' in data:
-        if data['role'] in dict(Adduser.ROLE_CHOICES): 
-            user.role = data['role']
+        try:
+            role_obj = Role.objects.get(name__iexact=data['role'])
+            user.role = role_obj
             changes.append("Role updated")
-        else:
+        except Role.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Invalid role'}, status=400)
-
     user.save()
        #  SEND NOTIFICATION TO USER
     if changes:
@@ -162,7 +162,7 @@ def edit_user_api(request, user_id):
             'username': user.username,
             'email': user.email,
             'is_active': user.is_active,
-            'role': user.role,
+            'role': user.role.name if user.role else None,
             'contact_number': user.contact_number,
         }
     })
