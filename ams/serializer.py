@@ -2,21 +2,6 @@ from rest_framework import serializers
 from .models import Adduser,Role
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-# class AdduserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Adduser
-#         fields = [
-#             'id',
-#             'Full_Name',
-#             'username',
-#             'email',
-#             'role',
-#             'contact_number',
-#             'address',
-#             'employee_id',
-#         ]
-#         read_only_fields = ['id', 'username', 'employee_id']
-
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
