@@ -17,7 +17,11 @@ def create_role_api(request):
     # Normalize the input (e.g. 'frontend ' -> 'Frontend')
     role_name = role_name.strip().title()
 
-    role, created = Role.objects.get_or_create(name=role_name)
+    try:
+        role, created = Role.objects.get_or_create(name=role_name)
+    except Exception as e:
+        # Catch DB or other errors
+        return Response({"success": False, "error": str(e)}, status=500)
 
     return Response({
         "success": True,
