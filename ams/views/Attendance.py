@@ -166,110 +166,6 @@ def my_attendance_summary_api(request):
         "total_days": present_days + absent_days
     })
 
-# @csrf_exempt
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def attendance_api(request):
-#     user = request.user
-#     client_ip = get_client_ip(request)
-
-#     # ✅ Check if IP is inside allowed range
-#     if not is_ip_allowed(client_ip, settings.ALLOWED_ATTENDANCE_IP_RANGE):
-#         return Response({
-#             'success': False,
-#             'error': 'Attendance can only be marked from the office network'
-#         }, status=403)
-
-#     # ✅ Check time window
-#     now = datetime.now().time()
-#     if not (settings.ATTENDANCE_START_TIME <= now <= settings.ATTENDANCE_END_TIME):
-#         return Response({
-#             'success': False,
-#             'error': f'Attendance can only be marked between {settings.ATTENDANCE_START_TIME.strftime("%H:%M")} and {settings.ATTENDANCE_END_TIME.strftime("%H:%M")}'
-#         }, status=403)
-
-#     today = date.today()
-
-#     # ✅ Check holiday
-#     if is_holiday(today):
-#         return Response({"success": False, "error": "Attendance cannot be marked on a holiday." }, status=403)
-
-#     # ✅ Check if already marked today
-#     if Attendance.objects.filter(user=user, date=today).exists():
-#         return Response({'success': False, 'error': 'Attendance already marked today.'})
-
-#     # ✅ Determine punctuality
-#     status = "On Time" if now <= datetime.strptime("09:30:00", "%H:%M:%S").time() else "Late"
-
-#     # ✅ Save attendance
-#     attendance = Attendance.objects.create(
-#         user=user,
-#         ip_address=client_ip,
-#         status=status,                       
-#         attendance_status=Attendance.ATT_PRESENT,  
-#         date=today,
-#         check_in_time=timezone.now()
-#     )
-
-#     return Response({
-#         'success': True,
-#         'attendance': {
-#             'sn': attendance.id,
-#             'date': attendance.date.strftime("%m/%d/%Y"),
-#             'time': attendance.check_in_time.strftime("%H:%M:%S %p"),
-#             'ip': attendance.ip_address,
-#             'status': attendance.status,
-#             'attendance_status': attendance.attendance_status
-#         }
-#     })
-
-# @csrf_exempt
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def attendance_api(request):
-#     user = request.user
-#     client_ip = get_client_ip(request)
-
-#     if client_ip not in settings.ALLOWED_ATTENDANCE_IPS:
-#         return Response({'success': False, 'error': 'Attendence can only be marked form the office network'}, status=403)
-#     if not is_within_time_window():
-#         return Response({'success': False, 'error': 'Attendance can only be marked between 9:00 AM and 10:30 AM'}, status=403)
-    
-#     # Check if already marked today
-#     today = date.today()
-    
-#     if is_holiday(today):
-#         return Response({"success": False, "error": "Attendance cannot be marked on a holiday." }, status=403)
-    
-#     if Attendance.objects.filter(user=user, date=today).exists():
-#         return Response({'success': False, 'error': 'Attendance already marked today.'})
-    
-#     # Determine punctuality status based on check-in time
-#     current_time = datetime.now().time()
-#     status = "On Time" if current_time <= datetime.strptime("09:30:00", "%H:%M:%S").time() else "Late"
-
-#     # Save attendance (with new attendance_status field)
-#     attendance = Attendance.objects.create(
-#         user=user,
-#         ip_address=client_ip,
-#         status=status,                       #  On Time / Late
-#         attendance_status=Attendance.ATT_PRESENT,  # new field for Present / Absent
-#         date=today,
-#         check_in_time=timezone.now()
-#     )
-#     return Response({
-#         'success': True,
-#         'attendance': {
-#             'sn': attendance.id,
-#             'date': attendance.date.strftime("%m/%d/%Y"),
-#             'time': attendance.check_in_time.strftime("%H:%M:%S %p"),
-#             'ip': attendance.ip_address,
-#             'status': attendance.status,               # On Time / Late
-#             'attendance_status': attendance.attendance_status  # Present / Absent
-#         }
-#     }) 
-
-
 #------------------------------------
 # auto mark attendence absent function
 #-------------------------------------
@@ -360,8 +256,8 @@ def attendance_by_user(request, user_id):
         {
             'sn': idx + 1,
             'date': att.date.strftime("%m/%d/%Y"),
-            'time': att.check_in_time.strftime("%H:%M:%S %p"),
-            'ip': att.ip_address,
+            'time': att.check_in_time.strftime("%H:%M:%S %p") if att.check_in_time else "-",
+            'ip': att.ip_address if att.ip_address else "-",
             'attendance_status':att.attendance_status,
             'status': att.status
         }
