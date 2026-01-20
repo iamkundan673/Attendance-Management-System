@@ -242,8 +242,6 @@ def attendance_history_api(request):
     return Response({'success': True, 'records': data})
 #-----------------------------------------------
 #specific user attendence filter according to user id
-
-# from django.contrib.auth.models import Adduser
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # or add IsAdminUser for security
 def attendance_by_user(request, user_id):

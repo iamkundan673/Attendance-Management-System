@@ -1,63 +1,15 @@
-"""
-URL configuration for myproject project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import path,include
-from . import views
-# from .views import HolidayCreateAPIView
-from ams.views import CustomTokenObtainPairView
 from django.http import HttpResponse
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
 
 def home(request):
     return HttpResponse("Attendance System is live!")
 
 urlpatterns = [
     path('',home,name='home'),
-    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('logout/', views.logout_api, name='logout_api'),
-    path('login/',views.user_login_api,name="user_login_api"),
-    path('dashboard/', views.dashboard_api, name='user-dashboard'),
-    path('attendance/', views.attendance_api, name='mark_attendance'),
-    path("auto-mark-absent/<str:secret_key>/", views.auto_mark_absent, name="auto_mark_absent"),
-    path('history/', views.attendance_history_api, name='attendance_history_api'),
-    path('crt/', views.create_user_api, name='get_client_ip_view'),
-    path('view/', views.user_list_api, name='user_list_api'),
-    path('disable/<int:user_id>/', views.user_disable_api, name='user_disable_api'),
-    path('delete/<int:user_id>/', views.user_delete, name='user_delete_api'),
-    path('update/<int:user_id>/', views.admin_reset_password, name='user_delete_api'),
-    path('adminattendancehistory/', views.all_attendance_api, name='all_attendence_api'),
-    path('edituser/<int:user_id>/', views.edit_user_api, name='edit_user_api'),
-    path('details/<int:user_id>/', views.attendance_by_user, name='attendance_history'),
-    path('uleavedetails/',views.my_attendance_summary_api,name='attendence_summary_of_user'),
-    path('alleavedetails/',views.present_absent_summary_api,name='present_absent_summary_api'),
-    path('profilepic/<int:user_id>/',views.upload_profile_picture_api,name='upload_profile_picture_api'),
-    path('hocreate/',views.holiday_create_api,name='holiday_create_api'),
-    path('listholiday/',views.holiday_list_api,name='holiday_list_api'),
-    path('delholiday/date/',views.holiday_delete_api,name='holiday_delete_api'),
-    path('viewprofile/<int:user_id>/',views.get_profile_picture_api,name='get_profile_picture_api'),
-    path('notifications/', views.my_notifications, name='my_notifications'),
-    path('notify/<int:id>/read/', views.mark_as_read, name='mark_as_read'),
-    path('role/', views.create_role_api, name='create_role_api'),
-    path('listrole/', views.get_roles_api, name='get_roles_api'),
-    path('editrole/<int:role_id>/', views.edit_role_api, name='edit_role_api'),
-
+    path('auth/', include('ams.urls.auth')),
+    path('user/', include('ams.urls.user')),
+    path('admin/', include('ams.urls.admin')),
+    path('notification/', include('ams.urls.notification')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
