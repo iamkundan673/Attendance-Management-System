@@ -10,28 +10,22 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-# -------------------------
-# Base & Imports
-# -------------------------
 from pathlib import Path
-from datetime import timedelta, time
+from datetime import timedelta
+
 from django.conf import settings
-import os
-import dj_database_url
-from dotenv import load_dotenv
-import cloudinary
 
-
-# -------------------------
-# Paths
-# -------------------------
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# -------------------------
-# Security Settings
-# -------------------------
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-6f&dy9eu8b+d%i=y$w0j8jv^ityd*@@==d7pab17!q5o0uh^w5'
-APPEND_SLASH = True
+APPEND_SLASH = True  # This is fine
+
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = [
@@ -48,21 +42,21 @@ ALLOWED_HOSTS = [
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
-# -------------------------
-# Email (SendGrid)
-# -------------------------
+# settings.py
+import os
 EMAIL_BACKEND = "sgbackend.SendGridBackend"
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-DEFAULT_FROM_EMAIL = os.environ.get("kundanchapagain555@gmail.com")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")  # Add in Render env vars
+DEFAULT_FROM_EMAIL = os.environ.get("kundanchapagain555@gmail.com")  # Verified sender email
 
-# -------------------------
-# Attendance Config
-# -------------------------
+
+# OFFICE_PUBLIC_IP = "27.34.111.72"
+# settings.py
 ALLOWED_PUBLIC_IP_RANGE = "27.34.111.0/24"
-OFFICE_LATITUDE = 26.647559272571538
+# 26.647559272571538, 87.99316366714861
+OFFICE_LATITUDE = 26.647559272571538   # example
 OFFICE_LONGITUDE = 87.99316366714861
 
-#Installed Apps & Middleware
+# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -106,9 +100,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.213.222.156:5174",
 ]
 
-# -------------------------
-# DRF / JWT
-# -------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
@@ -116,10 +107,13 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.AllowAny',  # allow public access by default
         'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.IsAdminUser',
     ),
+
+
+    
 }
 
 CSRF_TRUSTED_ORIGINS = [
@@ -129,16 +123,17 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-
-# -------------------------
-# Database (Render)
-# -------------------------
+import os
+from pathlib import Path
+import dj_database_url
+from dotenv import load_dotenv
 load_dotenv()
-load_dotenv(BASE_DIR / ".env")
 
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
@@ -146,9 +141,14 @@ DATABASES = {
         ssl_require=True
     )
 }
-DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+DATABASES['default']['OPTIONS'] = {
+    'sslmode': 'require'
+}
 
 AUTH_USER_MODEL = 'ams.Adduser'
+
+
+ROOT_URLCONF = 'myproject.urls'
 
 TEMPLATES = [
     {
@@ -165,24 +165,36 @@ TEMPLATES = [
     },
 ]
 
-
-# -------------------------
-# URL / WSGI
-# -------------------------
-ROOT_URLCONF = 'myproject.urls'
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-# Time and Attendance Settings
+# ALLOWED_ATTENDANCE_IP_RANGE = [
+#     "27.34.111.34",  # your office/campus static public IP
+# ]
 
+# settings.py
 TIME_ZONE = 'Asia/Kathmandu'
 USE_TZ = True
 from datetime import time
-ATTENDANCE_START_TIME = time(10, 00)   
-ATTENDANCE_END_TIME = time(18, 00)    
+
+# settings.py
+ATTENDANCE_START_TIME = time(10, 00)   # 9:00 AM
+ATTENDANCE_END_TIME = time(18, 00)    # 10:30 AM
 
 # Secret key for auto-mark endpoint
 AUTO_MARK_SECRET = "attend-2025-9f8a2cX!@"  # store in environment variable in production
+# Database
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'attendencedb',
+#         'USER': 'postgres',
+#         'PASSWORD': '12345',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -205,8 +217,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
+# https://docs.djangoproject.com/en/6.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 USE_I18N = True
+
 USE_TZ = True
 
 
@@ -215,23 +231,23 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
 MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware'] + MIDDLEWARE
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-# -------------------------
-# JWT DEFAULT Tokens
-# -------------------------
 DEFAULTS = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': settings.SECRET_KEY,
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
+
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
@@ -248,6 +264,7 @@ DEFAULTS = {
 ADMIN_EMAIL = "kundanchapagain555@gmail.com"
 
 #email setting 
+import os
 
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")  # store in .env and load with os.environ
